@@ -20,6 +20,12 @@ We believe that _taking away_ the low level details is essential to focusing on 
 
 We believe that this will allow the business process to evolve easily over time and make implementing process change much easier.
 
+## Business Data Model
+
+Business applications always work with data and are defined in terms of the data model.  For example, financial trading applications always have orders, fills, bookings and settlements.  
+
+The business data model includes essential business information and relationsjips, but no accidental complexity.  For example, we know a `fill` has a `price` and `quantity` and belongs to an `order`.
+
 ### Workflow?
 
 Isn't this proposal just talking about workflow systems?  
