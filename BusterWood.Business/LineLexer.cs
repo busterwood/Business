@@ -5,7 +5,7 @@ using BusterWood.Contracts;
 
 namespace BusterWood.Business
 {
-    public class LineLexer : IEnumerable<Token>
+    public class LineLexer : IEnumerable<Line>
     {
         readonly TextReader reader;
 
@@ -15,7 +15,7 @@ namespace BusterWood.Business
             this.reader = reader;
         }
 
-        public IEnumerator<Token> GetEnumerator()
+        public IEnumerator<Line> GetEnumerator()
         {
             int lineNumber = 0;
             for (;;)
@@ -42,28 +42,28 @@ namespace BusterWood.Business
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    public class Token
+    public class Line
     {
         public string Text { get; }
-        public int Line { get; }
+        public int LineNumber { get; }
 
-        public Token(string text, int line)
+        public Line(string text, int line)
         {
             Text = text;
-            Line = line;
+            LineNumber = line;
         }
 
         public override string ToString() => Text;
     }
 
-    public class Identifier : Token
+    public class Identifier : Line
     {
         public Identifier(string text, int line) : base(text, line)
         {
         }
     }
 
-    public class Declaration : Token
+    public class Declaration : Line
     {
         public Declaration(string text, int line) : base(text, line)
         {
