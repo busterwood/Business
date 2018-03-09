@@ -1,0 +1,110 @@
+data model:
+	user:
+		name
+
+	security:
+		name
+
+	investor:
+		name
+
+	basket:
+		decision maker (user)
+		has one or more orders
+
+	order:
+		has one or more allocations
+		security		
+
+	allocation:
+		investor
+		security
+		quantity
+
+	ticket:
+		from one or more allocations
+		security
+		quantity
+
+	broker order:
+		from one or more tickets
+		has one ore more fills
+		has zero or more bookings
+
+	fill:
+		broker
+		security
+		price
+		quantity
+
+	booking:
+		--todo: is this a real thing
+
+	broker:
+		name
+
+
+-- TODO technical failure separate from business process failure
+-- report techical failure, policy will then decide retry step, retry whole process
+
+process: 
+	place trade:
+		given a basket
+		check restrictions
+		reserve position
+		locate stock when selling short
+		group orders by restrictions into tickets
+		place tickets in EMS
+
+	locate stock:
+		request stock
+		wait for stock location
+
+	book broker order:
+		given a broker order
+		fairly allocate accross tickets
+		book fair allocations
+		if the booking fails then
+			booking is held
+		else
+			booking is complete
+
+	amend booked broker order:
+		given a booked broker order
+		change details of broker order
+		fairly allocate accross tickets
+		amend existing booking
+
+	amend held broker order:
+		given a broker order that has failed to book
+		change details of broker order
+		fairly allocate accross tickets
+		amend existing booking
+
+	cancel booked broker order:
+		given a booked broker order
+		cancel booking
+
+	late fill:
+		given a booked broker order
+		change one or more fills
+		fairly allocate accross tickets
+		amend existing booking
+
+	correct investor:
+		given a booked broker order
+		change investor of one or more tickets
+		amend existing booking
+
+	cancel order:
+		given an order
+		cancel tickets executing in EMS
+		cancel reserved positions
+		order is now cancelled
+
+	cancel basket:
+		given a basket
+		cancel tickets executing in EMS
+		cancel reserved positions
+		all orders are now cancelled
+		basket is now cancelled
