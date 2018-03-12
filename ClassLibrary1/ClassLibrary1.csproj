@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1BD65AE1-13D0-442F-9176-2BEE890EE8A8}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Business.Tests</RootNamespace>
-    <AssemblyName>Business.Tests</AssemblyName>
+    <ProjectGuid>{473C3F46-1C15-4BB0-9500-ED10A7F11889}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ClassLibrary1</RootNamespace>
+    <AssemblyName>ClassLibrary1</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -45,24 +43,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataModelReaderTests.cs" />
-    <Compile Include="GenerateSample.cs" />
-    <Compile Include="LexerTests.cs" />
-    <Compile Include="ProcessModelTests.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="..\Business.Tests\bin\Release\processes.cs">
+      <Link>processes.cs</Link>
+    </Compile>
+    <Compile Include="..\Business.Tests\bin\Release\tables.cs">
+      <Link>tables.cs</Link>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\BusterWood.Business\BusterWood.Business.csproj">
-      <Project>{b4de288a-062d-454b-96c9-1e7f8602d7fd}</Project>
-      <Name>BusterWood.Business</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

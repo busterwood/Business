@@ -8,9 +8,11 @@ namespace BusterWood.Business
     class DataModelReader : IEnumerable<Table>
     {
         public const string ModelName = "data model";
-        private readonly IEnumerable<Line> _lines;
+        private readonly LookAheadEnumerator<Line> _lines;
 
-        public DataModelReader(IEnumerable<Line> lines)
+        public DataModelReader(IEnumerable<Line> lines) : this(new LookAheadEnumerator<Line>(lines.GetEnumerator())) { }
+
+        public DataModelReader(LookAheadEnumerator<Line> lines)
         {
             Contract.RequiresNotNull(lines);
             _lines = lines;
@@ -18,40 +20,38 @@ namespace BusterWood.Business
 
         public IEnumerator<Table> GetEnumerator()
         {
-            var lines = new LookAheadEnumerator<Line>(_lines.GetEnumerator());
-
-            bool got = lines.MoveNext();
+            bool got = _lines.MoveNext();
             if (!got)
                 throw new ParseException("Unexpected end of file when expecting a data model declaration");
 
-            var dm = lines.Current as Identifier;
+            var dm = _lines.Current as Identifier;
             if (dm == null || !dm.Is(ModelName))
-                throw new ParseException($"Expected data model declaration but got {lines.Current}");
+                throw new ParseException($"Expected data model declaration but got {_lines.Current}");
 
             Table table = null;
             for(;;)
             {
-                got = lines.MoveNext();
+                got = _lines.MoveNext();
                 if (!got)
                     break;
 
-                if (lines.Current is Identifier)
+                if (_lines.Current is Identifier)
                 {
                     if (table != null)
                         yield return table;
-                    table = new Table(lines.Current);
+                    table = new Table(_lines.Current);
                 }
                 else
                 {
                     if (table == null)
-                       throw new ParseException($"Expected table declaration but got {lines.Current}");
+                       throw new ParseException($"Expected table declaration but got {_lines.Current}");
                     
                     //TODO: parse relationship, e.g. "has one or more orders"
 
-                    table.Fields.Add(new Field(lines.Current));
+                    table.Fields.Add(new Field(_lines.Current));
                 }
 
-                if (lines.Next is Identifier i && i.Is(ProcessModelReader.ModelName))
+                if (_lines.Next is Identifier i && i.Is(ProcessModelReader.ModelName))
                     break;
             }
 

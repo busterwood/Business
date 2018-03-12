@@ -9,9 +9,11 @@ namespace BusterWood.Business
     {
         public const string ModelName = "process";
 
-        private readonly IEnumerable<Line> _lines;
+        private readonly LookAheadEnumerator<Line> _lines;
 
-        public ProcessModelReader(IEnumerable<Line> lines)
+        public ProcessModelReader(IEnumerable<Line> lines) : this(new LookAheadEnumerator<Line>(lines.GetEnumerator())) { }
+
+        public ProcessModelReader(LookAheadEnumerator<Line> lines)
         {
             Contract.RequiresNotNull(lines);
             _lines = lines;
@@ -19,37 +21,35 @@ namespace BusterWood.Business
 
         public IEnumerator<BusinessProcess> GetEnumerator()
         {
-            var lines = new LookAheadEnumerator<Line>(_lines.GetEnumerator());
-
-            bool got = lines.MoveNext();
+            bool got = _lines.MoveNext();
             if (!got)
                 throw new ParseException("Unexpected end of file when expecting a process model declaration");
 
-            var pm = lines.Current as Identifier;
+            var pm = _lines.Current as Identifier;
             if (pm == null || !pm.Is(ModelName))
-                throw new ParseException($"Expected process model declaration but got {lines.Current}");
+                throw new ParseException($"Expected process model declaration but got {_lines.Current}");
 
             BusinessProcess process = null;
             for(;;)
             {
-                got = lines.MoveNext();
+                got = _lines.MoveNext();
                 if (!got)
                     break;
 
-                if (lines.Current is Identifier)
+                if (_lines.Current is Identifier)
                 {
                     if (process != null)
                         yield return process;
-                    process = new BusinessProcess(lines.Current);
+                    process = new BusinessProcess(_lines.Current);
                 }
                 else
                 {
                     if (process == null)
-                       throw new ParseException($"Expected table declaration but got {lines.Current}");
+                       throw new ParseException($"Expected table declaration but got {_lines.Current}");
 
                     //TODO: parse "Given some data"
 
-                    process.Steps.Add(new Step(lines.Current));
+                    process.Steps.Add(new Step(_lines.Current));
                 }
             }
 

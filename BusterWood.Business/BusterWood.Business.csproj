@@ -13,9 +13,5 @@
   <ItemGroup>
     <PackageReference Include="BusterWood.Goodies" Version="0.7.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
   
 </Project>

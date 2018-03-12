@@ -2,6 +2,8 @@
 using System.Collections;
 using System.IO;
 using BusterWood.Contracts;
+using System.Text;
+using BusterWood.Goodies;
 
 namespace BusterWood.Business
 {
@@ -69,4 +71,18 @@ namespace BusterWood.Business
         }
     }
 
+
+    public static class Extensions
+    {
+        public static string ClrName(this Line l)
+        {
+            var sb = new StringBuilder();
+            foreach (var w in l.Text.Split(' '))
+            {
+                sb.Append(w[0].ToUpper());
+                sb.Append(w.Substring(1).ToLower());
+            }
+            return sb.ToString();
+        }
+    }
 }
