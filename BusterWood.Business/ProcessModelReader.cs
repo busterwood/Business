@@ -46,6 +46,9 @@ namespace BusterWood.Business
                 {
                     if (process == null)
                        throw new ParseException($"Expected table declaration but got {lines.Current}");
+
+                    //TODO: parse "Given some data"
+
                     process.Steps.Add(new Step(lines.Current));
                 }
             }
