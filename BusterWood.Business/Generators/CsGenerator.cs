@@ -1,4 +1,5 @@
 ﻿using BusterWood.Collections;
+using System;
 using System.IO;
 
 namespace BusterWood.Business
@@ -17,10 +18,9 @@ namespace BusterWood.Business
             using (var output = new StreamWriter(Path.Combine(outputFolder, "tables.cs")))
             {
                 output.WriteLine("using System;");
-                output.WriteLine("using System.Threading.Tasks;");
-                output.WriteLine();
                 foreach (var t in tables)
                 {
+                    output.WriteLine();
                     GenerateTable(t, output);
                 }
             }
@@ -42,11 +42,10 @@ namespace BusterWood.Business
             using (var output = new StreamWriter(Path.Combine(outputFolder, "processes.cs")))
             {
                 output.WriteLine("using System;");
-                output.WriteLine("using System.Threading.Tasks;");
                 output.WriteLine("using BusterWood.Logging;");
-                output.WriteLine();
                 foreach (var p in businessProcesses)
                 {
+                    output.WriteLine();
                     GenerateProcess(p, output);
                 }
             }
@@ -55,45 +54,87 @@ namespace BusterWood.Business
         private void GenerateProcess(BusinessProcess p, StreamWriter output)
         {
             string className = p.ClrName();
-            output.WriteLine($"public class {className}");
+            output.WriteLine($"public partial class {className}");
             output.WriteLine("{");
+            output.WriteLine("\tStep _step;");
 
-            output.WriteLine("\tpublic async Task Execute()");
+            output.WriteLine("\tpublic void Execute()");
             output.WriteLine("\t{");
-            output.WriteLine($"\t\tLog.Info($\"Before {{nameof({className})}}\");");
+
+            output.WriteLine("\t\tfor(;;)");
+            output.WriteLine("\t\t{");
+            output.WriteLine("\t\t\tswitch (_step)");
+            output.WriteLine("\t\t\t{");
+            output.WriteLine("\t\t\t\tcase Step._Start:");
+            output.WriteLine("\t\t\t\t\tBeforeExecute();");
+            output.WriteLine("\t\t\t\t\tbreak;");
             foreach (var s in p.Steps)
             {
-                output.WriteLine($"\t\tawait {s.ClrName()}();");
+                output.WriteLine($"\t\t\t\tcase Step.{s.ClrName()}:");
+                output.WriteLine($"\t\t\t\t\t{s.ClrName()}();");
+                output.WriteLine("\t\t\t\t\tbreak;");
             }
-            output.WriteLine($"\t\tLog.Info($\"After {{nameof({className})}}\");");
+            output.WriteLine("\t\t\t\tcase Step._End:");
+            output.WriteLine("\t\t\t\t\tAfterExecute();");
+            output.WriteLine("\t\t\t\t\tbreak;");
+            output.WriteLine("\t\t\t\tdefault:");
+            output.WriteLine("\t\t\t\t\tthrow new InvalidOperationException(_step.ToString());");
+            output.WriteLine("\t\t\t}");
+            output.WriteLine("\t\t}");
             output.WriteLine("\t}");
-            
-            foreach (var s in p.Steps)
+
+            var e = new LookAheadEnumerator<Step>(p.Steps.GetEnumerator());
+            while (e.MoveNext())
             {
+                var s = e.Current;
                 output.WriteLine();
-                output.WriteLine($"\tprivate async Task {s.ClrName()}()");
+                output.WriteLine($"\tprivate void {s.ClrName()}()");
                 output.WriteLine("\t{");
-                output.WriteLine($"\t\tLog.Info($\"Before {{nameof({s.ClrName()})}}\");");
-                output.WriteLine($"\t\tawait Before{s.ClrName()}?.Invoke(this);");
-                output.WriteLine($"\t\tawait {s.ClrName()}Core();");
-                output.WriteLine($"\t\tawait After{s.ClrName()}?.Invoke(this);");
-                output.WriteLine($"\t\tLog.Info($\"After {{nameof({s.ClrName()})}}\");");
+                output.WriteLine($"\t\tStarting(Step.{s.ClrName()});");
+                output.WriteLine($"\t\tBefore{s.ClrName()}();");
+                output.WriteLine($"\t\t{s.ClrName()}Core();");
+                output.WriteLine($"\t\tAfter{s.ClrName()}();");
+                output.WriteLine($"\t\tFinished(Step.{s.ClrName()});");
+                var next = e.Next?.ClrName() ?? "_End";
+                output.WriteLine($"\t\t_step = Step.{next};");
                 output.WriteLine("\t}");
             }
 
+            output.WriteLine();
+            output.WriteLine("\tpartial void BeforeExecute();");
+            output.WriteLine();
+            output.WriteLine("\tpartial void AfterExecute();");
+
             foreach (var s in p.Steps)
             {
                 output.WriteLine();
-                output.WriteLine($"\tprotected virtual Task {s.ClrName()}Core() => Task.CompletedTask;");
+                output.WriteLine($"\tpartial void {s.ClrName()}Core();");
             }
 
             foreach (var s in p.Steps)
             {
                 output.WriteLine();
-                output.WriteLine($"\tpublic event Func<{className}, Task> Before{s.ClrName()};");
+                output.WriteLine($"\tpartial void Before{s.ClrName()}();");
                 output.WriteLine();
-                output.WriteLine($"\tpublic event Func<{className}, Task> After{s.ClrName()};");
+                output.WriteLine($"\tpartial void After{s.ClrName()}();");
             }
+
+            output.WriteLine();
+            output.WriteLine("\tpartial void Starting(Step step);");
+            output.WriteLine();
+            output.WriteLine("\tpartial void Finished(Step step);");
+
+            output.WriteLine();
+            output.WriteLine("\tenum Step");
+            output.WriteLine("\t{");
+            output.WriteLine($"\t\t_Start,");
+            foreach (var s in p.Steps)
+            {
+                output.WriteLine($"\t\t{s.ClrName()},");
+            }
+            output.WriteLine($"\t\t_End,");
+            output.WriteLine("\t}");
+
             output.WriteLine("}");
         }
 
