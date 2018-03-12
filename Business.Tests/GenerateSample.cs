@@ -15,11 +15,7 @@ namespace BusterWood.Business
         {
             using (var f = new StreamReader(@"..\..\..\sample.txt"))
             {
-                var lex = new LineLexer(f);
-                var e = new LookAheadEnumerator<Line>(lex.GetEnumerator());
-                var dmr = new DataModelReader(e);
-                var pmr = new ProcessModelReader(e);
-                var mod = new Model(dmr.ToUniqueList(), pmr.ToUniqueList());
+                var mod = Model.Parse(f);
                 var gen = new CsGenerator();
                 gen.Generate(mod, Environment.CurrentDirectory);
             }
