@@ -22,12 +22,12 @@ data model:
 		quantity
 
 	ticket:
-		from one or more allocations
+		for one or more allocations
 		security
 		quantity
 
 	broker order:
-		from one or more tickets
+		for one or more tickets
 		has one ore more fills
 		has zero or more bookings
 
@@ -45,7 +45,7 @@ data model:
 
 
 -- TODO technical failure separate from business process failure
--- report techical failure, policy will then decide retry step, retry whole process
+-- report technical failure, policy will then decide retry step, retry whole process
 
 process: 
 	place trade:
@@ -72,13 +72,13 @@ process:
 	amend booked broker order:
 		given a booked broker order
 		change details of broker order
-		fairly allocate accross tickets
+		fairly allocate across tickets
 		amend existing booking
 
 	amend held broker order:
 		given a broker order that has failed to book
 		change details of broker order
-		fairly allocate accross tickets
+		fairly allocate across tickets
 		amend existing booking
 
 	cancel booked broker order:
@@ -88,7 +88,7 @@ process:
 	late fill:
 		given a booked broker order
 		change one or more fills
-		fairly allocate accross tickets
+		fairly allocate across tickets
 		amend existing booking
 
 	correct investor:

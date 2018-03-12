@@ -59,6 +59,7 @@ namespace BusterWood.Business
         public override string ToString() => Text;
     }
 
+    /// <summary>A name of a data table or business logic script</summary>
     public class Identifier : Line
     {
         public Identifier(string text, int line) : base(text, line)
@@ -66,6 +67,7 @@ namespace BusterWood.Business
         }
     }
 
+    /// <summary>An attribute of a data table or a step in a business logic script</summary>
     public class Statement : Line
     {
         public Statement(string text, int line) : base(text, line)
