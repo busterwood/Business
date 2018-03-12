@@ -38,14 +38,14 @@ data model:
 		quantity
 
 	booking:
-		--todo: is this a real thing
+		// is this a real thing or accidental complexity?
 
 	broker:
 		name
 
 
--- TODO technical failure separate from business process failure
--- report technical failure, policy will then decide retry step, retry whole process
+// TODO technical failure separate from business process failure
+// report technical failure, policy will then decide retry step, retry whole process
 
 process: 
 	place trade:
@@ -63,11 +63,7 @@ process:
 	book broker order:
 		given a broker order
 		fairly allocate across tickets
-		book fair allocations
-		if the booking fails then
-			booking is held
-		else
-			booking is complete
+		book the fair allocations
 
 	amend booked broker order:
 		given a booked broker order

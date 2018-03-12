@@ -45,6 +45,8 @@ namespace BusterWood.Business
                 {
                     if (table == null)
                        throw new ParseException($"Expected table declaration but got {lines.Current}");
+                    
+                    //TODO: parse relationship, e.g. "has one or more orders"
                     table.Fields.Add(new Field(lines.Current));
                 }
 
