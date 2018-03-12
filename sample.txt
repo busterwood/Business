@@ -62,7 +62,7 @@ process:
 
 	book broker order:
 		given a broker order
-		fairly allocate accross tickets
+		fairly allocate across tickets
 		book fair allocations
 		if the booking fails then
 			booking is held

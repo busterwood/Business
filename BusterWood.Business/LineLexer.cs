@@ -20,22 +20,25 @@ namespace BusterWood.Business
             int lineNumber = 0;
             for (;;)
             {
-                var line = reader.ReadLine()?.Trim();
+                var line = reader.ReadLine();
                 if (line == null)
                     break;
 
                 lineNumber++;
 
-                if (line.Length == 0) // empty line
-                    continue;
+                var commentStart = line.IndexOf("//");
+                if (commentStart >= 0)
+                    line = line.Substring(0, commentStart);
 
-                if (line.StartsWith("//")) // comment
+                line = line.Trim();
+
+                if (line.Length == 0) // empty line
                     continue;
 
                 if (line.EndsWith(":"))
                     yield return new Identifier(line.TrimEnd(':'), lineNumber);
                 else
-                    yield return new Declaration(line, lineNumber);
+                    yield return new Statement(line, lineNumber);
             }
         }
 
@@ -63,9 +66,9 @@ namespace BusterWood.Business
         }
     }
 
-    public class Declaration : Line
+    public class Statement : Line
     {
-        public Declaration(string text, int line) : base(text, line)
+        public Statement(string text, int line) : base(text, line)
         {
         }
     }
