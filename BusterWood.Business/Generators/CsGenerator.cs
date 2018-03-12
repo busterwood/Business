@@ -1,13 +1,8 @@
 ﻿using BusterWood.Collections;
-using BusterWood.Goodies;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace BusterWood.Business
 {
-
     public class CsGenerator : IGenerator
     {
         public void Generate(Model model, string outputFolder)
