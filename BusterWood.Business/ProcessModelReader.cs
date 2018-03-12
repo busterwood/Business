@@ -7,7 +7,7 @@ namespace BusterWood.Business
 {
     class ProcessModelReader : IEnumerable<BusinessProcess>
     {
-        public const string ProcessModel = "process";
+        public const string ModelName = "process";
 
         private readonly IEnumerable<Line> _lines;
 
@@ -26,7 +26,7 @@ namespace BusterWood.Business
                 throw new ParseException("Unexpected end of file when expecting a process model declaration");
 
             var pm = lines.Current as Identifier;
-            if (pm == null || !pm.Is(ProcessModel))
+            if (pm == null || !pm.Is(ModelName))
                 throw new ParseException($"Expected process model declaration but got {lines.Current}");
 
             BusinessProcess process = null;
@@ -46,7 +46,7 @@ namespace BusterWood.Business
                 {
                     if (process == null)
                        throw new ParseException($"Expected table declaration but got {lines.Current}");
-                    process.Statements.Add(new Statement(lines.Current));
+                    process.Steps.Add(new Step(lines.Current));
                 }
             }
 
@@ -65,14 +65,14 @@ namespace BusterWood.Business
         {
         }
 
-        public UniqueList<Statement> Statements { get; } = new UniqueList<Statement>();
+        public UniqueList<Step> Steps { get; } = new UniqueList<Step>();
     }
 
-    public class Statement : Line
+    public class Step : Line
     {
-        internal Statement(Line l) : base(l.Text, l.LineNumber) { }
+        internal Step(Line l) : base(l.Text, l.LineNumber) { }
 
-        public Statement(string text, int line) : base(text, line)
+        public Step(string text, int line) : base(text, line)
         {
         }
     }

@@ -7,7 +7,7 @@ namespace BusterWood.Business
 {
     class DataModelReader : IEnumerable<Table>
     {
-        public const string DataModel = "data model";
+        public const string ModelName = "data model";
         private readonly IEnumerable<Line> _lines;
 
         public DataModelReader(IEnumerable<Line> lines)
@@ -25,7 +25,7 @@ namespace BusterWood.Business
                 throw new ParseException("Unexpected end of file when expecting a data model declaration");
 
             var dm = lines.Current as Identifier;
-            if (dm == null || !dm.Is(DataModel))
+            if (dm == null || !dm.Is(ModelName))
                 throw new ParseException($"Expected data model declaration but got {lines.Current}");
 
             Table table = null;
@@ -50,7 +50,7 @@ namespace BusterWood.Business
                     table.Fields.Add(new Field(lines.Current));
                 }
 
-                if (lines.Next is Identifier i && i.Is(ProcessModelReader.ProcessModel))
+                if (lines.Next is Identifier i && i.Is(ProcessModelReader.ModelName))
                     break;
             }
 

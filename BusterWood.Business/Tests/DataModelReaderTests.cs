@@ -14,7 +14,7 @@ namespace BusterWood.Business
         public static void can_read_zero_tables(Test t)
         {
             var reader = new DataModelReader(new Line[] {
-                new Identifier(DataModelReader.DataModel, 1),
+                new Identifier(DataModelReader.ModelName, 1),
             });
             var tables = reader.ToList();
             t.Assert(() => tables.Count == 0);
@@ -23,7 +23,7 @@ namespace BusterWood.Business
         public static void can_read_one_table_without_any_fields(Test t)
         {
             var reader = new DataModelReader(new Line[] {
-                new Identifier(DataModelReader.DataModel, 1),
+                new Identifier(DataModelReader.ModelName, 1),
                 new Identifier("order", 1)
             });
             var tables = reader.ToList();
@@ -35,7 +35,7 @@ namespace BusterWood.Business
         public static void cannot_read_field_without_table(Test t)
         {
             var reader = new DataModelReader(new Line[] {
-                new Identifier(DataModelReader.DataModel, 1),
+                new Identifier(DataModelReader.ModelName, 1),
                 new Line("order", 1)
             });
             t.AssertThrows<ParseException>(() => reader.ToList());
@@ -44,7 +44,7 @@ namespace BusterWood.Business
         public static void can_read_one_table_with_one_field(Test t)
         {
             var reader = new DataModelReader(new Line[] {
-                new Identifier(DataModelReader.DataModel, 1),
+                new Identifier(DataModelReader.ModelName, 1),
                 new Identifier("order", 1),
                 new Line("user", 1),
             });
@@ -59,7 +59,7 @@ namespace BusterWood.Business
         public static void can_read_multiple_tables_with_fields(Test t)
         {
             var reader = new DataModelReader(new Line[] {
-                new Identifier(DataModelReader.DataModel, 1),
+                new Identifier(DataModelReader.ModelName, 1),
                 new Identifier("order", 1),
                 new Line("user", 2),
                 new Line("basket", 3),
@@ -86,11 +86,11 @@ namespace BusterWood.Business
         public static void process_model_terminates_the_data_model(Test t)
         {
             var reader = new DataModelReader(new Line[] {
-                new Identifier(DataModelReader.DataModel, 1),
+                new Identifier(DataModelReader.ModelName, 1),
                 new Identifier("order", 1),
                 new Line("user", 2),
                 new Line("basket", 3),
-                new Identifier(ProcessModelReader.ProcessModel, 4), // terminates the data model
+                new Identifier(ProcessModelReader.ModelName, 4), // terminates the data model
                 new Line("price", 5),
                 new Line("quantity", 6),
             });

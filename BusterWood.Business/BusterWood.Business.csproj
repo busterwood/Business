@@ -54,6 +54,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tests\DataModelReaderTests.cs" />
     <Compile Include="Tests\LexerTests.cs" />
+    <Compile Include="Tests\ProcessModelTests.cs" />
     <Compile Include="Tests\Program.cs" />
   </ItemGroup>
   <ItemGroup>
