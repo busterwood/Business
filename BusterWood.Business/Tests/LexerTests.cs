@@ -36,11 +36,11 @@ namespace BusterWood.Business
         }
 
 
-        public static void can_read_statement(Test t)
+        public static void can_read_lines(Test t)
         {
             foreach (var input in new[] { "name", "name\r\n", " name\n", "   name   ", "\tname\t" })
             {
-                TestStatement(t, input);
+                TestLine(t, input);
             }
         }
 
@@ -48,7 +48,7 @@ namespace BusterWood.Business
         {
             foreach (var input in new[] { "\r\nname", "\r\nname\r\n", " \r\nname\n", "\r\n   name   \r\n\r\n", "\tname\t\r\n\r\n\r\n" })
             {
-                TestStatement(t, input);
+                TestLine(t, input);
             }
         }
 
@@ -56,7 +56,7 @@ namespace BusterWood.Business
         {
             foreach (var input in new[] { "name\n//fred", "name\r\n//fred", "    name   \r\n\r\n    //fred\r\n" })
             {
-                TestStatement(t, input);
+                TestLine(t, input);
             }
         }
 
@@ -64,11 +64,11 @@ namespace BusterWood.Business
         {
             foreach (var input in new[] { "name  //fred", "name\t//fred"})
             {
-                TestStatement(t, input);
+                TestLine(t, input);
             }
         }
 
-        static void TestStatement(Test t, string input, string expected = "name")
+        static void TestLine(Test t, string input, string expected = "name")
         {
             var reader = new StringReader(input);
             var lex = new LineLexer(reader);
@@ -81,16 +81,15 @@ namespace BusterWood.Business
             }
 
             var first = tokens[0];
-            if (!(first is Statement))
+            if (first.GetType() != typeof(Line))
             {
-                t.Error($"Expected first token to be a {nameof(Statement)} but was a {first?.GetType()} for input '{input}'");
+                t.Error($"Expected first token to be a {nameof(Line)} but was a {first?.GetType()} for input '{input}'");
                 return;
             }
 
-            var id = (Statement)first;
-            if (id.Text != expected)
+            if (first.Text != expected)
             {
-                t.Error($"Expected '{expected}' but got '{id.Text}' for input '{input}'");
+                t.Error($"Expected '{expected}' but got '{first.Text}' for input '{input}'");
             }
         }
     }

@@ -11,7 +11,7 @@ namespace BusterWood.Business
 
         public LineLexer(TextReader reader)
         {
-            Contract.Assert(reader != null);
+            Contract.RequiresNotNull(reader);
             this.reader = reader;
         }
 
@@ -38,7 +38,7 @@ namespace BusterWood.Business
                 if (line.EndsWith(":"))
                     yield return new Identifier(line.TrimEnd(':'), lineNumber);
                 else
-                    yield return new Statement(line, lineNumber);
+                    yield return new Line(line, lineNumber);
             }
         }
 
@@ -57,20 +57,14 @@ namespace BusterWood.Business
         }
 
         public override string ToString() => Text;
+
+        public bool Is(string other) => string.Equals(Text, other, System.StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>A name of a data table or business logic script</summary>
     public class Identifier : Line
     {
         public Identifier(string text, int line) : base(text, line)
-        {
-        }
-    }
-
-    /// <summary>An attribute of a data table or a step in a business logic script</summary>
-    public class Statement : Line
-    {
-        public Statement(string text, int line) : base(text, line)
         {
         }
     }
