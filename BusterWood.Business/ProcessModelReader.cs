@@ -132,9 +132,9 @@ namespace BusterWood.Business
     [Flags]
     public enum Multiplicity
     {
-        Zero = 0,
-        One = 1,
-        Many = 2,
+        Zero = 1,
+        One = 2,
+        Many = 4,
         ZeroOrOne = Zero | One,
         ZeroOrMore = Zero | Many,
         OneOrMore = One | Many,

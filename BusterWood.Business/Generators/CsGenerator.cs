@@ -109,7 +109,7 @@ namespace BusterWood.Business
         {
             if (p.Given == null) return;
             var g = p.Given;
-            output.WriteLine($"\t/// <summary>Given {g.Many} {g.What} that {g.Condition}</summary>");
+            output.WriteLine($"\t/// <summary>{g}</summary>");
             output.WriteLine($"\tpublic abstract bool Given(I{g.What.ClrName()} item);");
             output.WriteLine();
         }
