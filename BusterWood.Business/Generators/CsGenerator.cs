@@ -59,21 +59,10 @@ namespace BusterWood.Business
             output.WriteLine("\tStep _step;");
             output.WriteLine();
 
-            output.WriteLine("\tpublic void Execute()");
-            output.WriteLine("\t{");
-
-            output.WriteLine("\t\tStarting();");
-            foreach (var s in p.Steps)
-            {
-                output.WriteLine($"\t\t{s.ClrName()}();");
-            }
-            output.WriteLine("\t\tFinished();");
-            output.WriteLine("\t}");
-
+            GenerateGiven(p, output);
+            GenerateExecute(p, output);
             GenerateStarting(p, output);
-
             GenerateSteps(p, output);
-
             GenerateFinished(p, output);
 
             output.WriteLine();
@@ -114,6 +103,29 @@ namespace BusterWood.Business
             output.WriteLine("\t}");
 
             output.WriteLine("}");
+        }
+
+        private static void GenerateGiven(BusinessProcess p, StreamWriter output)
+        {
+            if (p.Given == null) return;
+            var g = p.Given;
+            output.WriteLine($"\t/// <summary>Given {g.Many} {g.What} that {g.Condition}</summary>");
+            output.WriteLine($"\tpublic abstract bool Given(I{g.What.ClrName()} item);");
+            output.WriteLine();
+        }
+
+        private static void GenerateExecute(BusinessProcess p, StreamWriter output)
+        {
+            output.WriteLine("\tpublic void Execute()");
+            output.WriteLine("\t{");
+
+            output.WriteLine("\t\tStarting();");
+            foreach (var s in p.Steps)
+            {
+                output.WriteLine($"\t\t{s.ClrName()}();");
+            }
+            output.WriteLine("\t\tFinished();");
+            output.WriteLine("\t}");
         }
 
         private static void GenerateSteps(BusinessProcess p, StreamWriter output)

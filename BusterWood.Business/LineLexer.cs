@@ -4,6 +4,8 @@ using System.IO;
 using BusterWood.Contracts;
 using System.Text;
 using BusterWood.Goodies;
+using BusterWood.Linq;
+using System.Linq;
 
 namespace BusterWood.Business
 {
@@ -74,15 +76,21 @@ namespace BusterWood.Business
 
     public static class Extensions
     {
-        public static string ClrName(this Line l)
+        public static string ClrName(this string text)
         {
             var sb = new StringBuilder();
-            foreach (var w in l.Text.Split(' '))
+            foreach (var w in text.SplitOn(char.IsWhiteSpace))
             {
-                sb.Append(w[0].ToUpper());
-                sb.Append(w.Substring(1).ToLower());
+                var nospace = w.Where(c => !char.IsWhiteSpace(c));
+                sb.Append(nospace.First().ToUpper());
+                foreach (var c in nospace.Skip(1))
+                {
+                    sb.Append(c.ToLower());
+                }
             }
             return sb.ToString();
         }
+
+        public static string ClrName(this Line l) => l.Text.ClrName();
     }
 }
