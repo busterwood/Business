@@ -60,18 +60,25 @@ namespace ClassLibrary1
         protected override void OnStart(Step step)
         {
             transaction = new TransactionScope(TransactionScopeOption.Required);
-            Log.Info("Starting step " + step);
+            Log.Info("Starting", new { step });
             start = DateTime.UtcNow;
         }
 
         protected override void OnEnd(Step step)
         {
-            //TODO how to hook into technical failure?
             transaction.Complete();
             transaction.Dispose();
 
             var elapsed = DateTime.UtcNow - start;
-            Log.Info($"Finished step {step} in {elapsed.ToHuman()}");
+            Log.Info($"Finished in {elapsed.ToHuman()}", new { step });
+        }
+
+        protected override void OnFailure(Step step, Exception e)
+        {
+            transaction.Dispose();
+
+            var elapsed = DateTime.UtcNow - start;
+            Log.Error($"Failed in {elapsed.ToHuman()}, transaction rolled back", new { step, error=e });
         }
     }
 }

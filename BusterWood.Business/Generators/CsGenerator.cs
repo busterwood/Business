@@ -79,6 +79,7 @@ namespace BusterWood.Business
 
         private void GenerateProcesses(UniqueList<BusinessProcess> businessProcesses, TextWriter output, string @namespace)
         {
+            output.WriteLine("using System;");
             StartNamespace(output, @namespace);
             foreach (var p in businessProcesses)
             {
@@ -123,6 +124,8 @@ namespace BusterWood.Business
             output.WriteLine("\tprotected virtual void OnStart(Step step) {}");
             output.WriteLine();
             output.WriteLine("\tprotected virtual void OnEnd(Step step) {}");
+            output.WriteLine();
+            output.WriteLine("\tprotected virtual void OnFailure(Step step, Exception e) {}");
 
             output.WriteLine();
             output.WriteLine("\tpublic enum Step");
@@ -152,12 +155,19 @@ namespace BusterWood.Business
             output.WriteLine("\tpublic void Execute()");
             output.WriteLine("\t{");
 
-            output.WriteLine("\t\tStarting();");
+            output.WriteLine("\t\ttry");
+            output.WriteLine("\t\t{");
+            output.WriteLine("\t\t\tStarting();");
             foreach (var s in p.Steps)
             {
-                output.WriteLine($"\t\t{s.ClrName()}();");
+                output.WriteLine($"\t\t\t{s.ClrName()}();");
             }
-            output.WriteLine("\t\tFinished();");
+            output.WriteLine("\t\t\tFinished();");
+            output.WriteLine("\t\t}");
+            output.WriteLine("\t\tcatch (Exception e)");
+            output.WriteLine("\t\t{");
+            output.WriteLine("\t\t\tOnFailure(_step, e);");
+            output.WriteLine("\t\t}");
             output.WriteLine("\t}");
         }
 
@@ -176,9 +186,9 @@ namespace BusterWood.Business
                 output.WriteLine($"\t\tBefore{stepName}();");
                 output.WriteLine($"\t\tOn{stepName}();");
                 output.WriteLine($"\t\tAfter{stepName}();");
-                output.WriteLine($"\t\tOnEnd(Step.{stepName});");
                 var next = e.Next?.ClrName() ?? "_Finish";
                 output.WriteLine($"\t\tSetNextStep(Step.{next});");
+                output.WriteLine($"\t\tOnEnd(Step.{stepName});");
                 output.WriteLine("\t}");
             }
         }
