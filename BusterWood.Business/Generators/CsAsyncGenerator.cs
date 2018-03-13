@@ -1,11 +1,12 @@
 ﻿using BusterWood.Collections;
+using System.Collections.Generic;
 using System.IO;
 
 namespace BusterWood.Business
 {
     public class CsAsyncGenerator : IGenerator
     {
-        public void Generate(Model model, string outputFolder)
+        public void Generate(Model model, string outputFolder, IReadOnlyDictionary<string, object> options)
         {
             GenerateTables(model.Tables, outputFolder);
             GenerateProcesses(model.BusinessProcesses, outputFolder);

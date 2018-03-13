@@ -4,19 +4,22 @@ using System.IO;
 using System.Linq;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
+using System.Collections.Generic;
 
 namespace BusterWood.Business
 {
     public class CsGenerator : IGenerator
     {
-        internal void Compile(Model model, string outputPath)
+        internal void Compile(Model model, string outputPath, IReadOnlyDictionary<string, object> options)
         {
+            string @namespace = options?.GetValueOrDefault("namespace")?.ToString();
+
             var codeProvider = new CSharpCodeProvider();
             var tables = new StringWriter();
-            GenerateTables(model.Tables, tables);
+            GenerateTables(model.Tables, tables, @namespace);
 
             var process = new StringWriter();
-            GenerateProcesses(model.BusinessProcesses, process);
+            GenerateProcesses(model.BusinessProcesses, process, @namespace);
 
             var @params = new CompilerParameters(new string[0], outputPath);
             var results = codeProvider.CompileAssemblyFromSource(@params, tables.GetStringBuilder().ToString(), process.GetStringBuilder().ToString());
@@ -25,21 +28,40 @@ namespace BusterWood.Business
                 throw new Exception(errors);
         }
 
-        public void Generate(Model model, string outputFolder)
+        public void Generate(Model model, string outputFolder, IReadOnlyDictionary<string, object> options)
         {
+            string @namespace = options?.GetValueOrDefault("namespace")?.ToString();
+
             using (var output = new StreamWriter(Path.Combine(outputFolder, "tables.cs")))
-                GenerateTables(model.Tables, output);
+                GenerateTables(model.Tables, output, @namespace);
 
             using (var output = new StreamWriter(Path.Combine(outputFolder, "processes.cs")))
-                GenerateProcesses(model.BusinessProcesses, output);
+                GenerateProcesses(model.BusinessProcesses, output, @namespace);
         }
 
-        private void GenerateTables(UniqueList<Table> tables, TextWriter output)
+        private void GenerateTables(UniqueList<Table> tables, TextWriter output, string @namespace)
         {
+            StartNamespace(output, @namespace);
             foreach (var t in tables)
             {
                 output.WriteLine();
                 GenerateTable(t, output);
+            }
+            EndNamespace(output, @namespace);
+        }
+
+        private static void EndNamespace(TextWriter output, string @namespace)
+        {
+            if (!string.IsNullOrWhiteSpace(@namespace))
+                output.WriteLine("}");
+        }
+
+        private static void StartNamespace(TextWriter output, string @namespace)
+        {
+            if (!string.IsNullOrWhiteSpace(@namespace))
+            {
+                output.WriteLine("namespace " + @namespace);
+                output.WriteLine("{");
             }
         }
 
@@ -55,13 +77,15 @@ namespace BusterWood.Business
             output.WriteLine("}");
         }
 
-        private void GenerateProcesses(UniqueList<BusinessProcess> businessProcesses, TextWriter output)
+        private void GenerateProcesses(UniqueList<BusinessProcess> businessProcesses, TextWriter output, string @namespace)
         {
+            StartNamespace(output, @namespace);
             foreach (var p in businessProcesses)
             {
                 output.WriteLine();
                 GenerateProcess(p, output);
             }
+            EndNamespace(output, @namespace);
         }
 
         private void GenerateProcess(BusinessProcess p, TextWriter output)
