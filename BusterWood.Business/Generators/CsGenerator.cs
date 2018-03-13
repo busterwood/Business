@@ -1,6 +1,7 @@
 ﻿using BusterWood.Collections;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace BusterWood.Business
 {
@@ -42,7 +43,6 @@ namespace BusterWood.Business
             using (var output = new StreamWriter(Path.Combine(outputFolder, "processes.cs")))
             {
                 output.WriteLine("using System;");
-                output.WriteLine("using BusterWood.Logging;");
                 foreach (var p in businessProcesses)
                 {
                     output.WriteLine();
@@ -54,90 +54,111 @@ namespace BusterWood.Business
         private void GenerateProcess(BusinessProcess p, StreamWriter output)
         {
             string className = p.ClrName();
-            output.WriteLine($"public partial class {className}");
+            output.WriteLine($"public abstract class {className}");
             output.WriteLine("{");
             output.WriteLine("\tStep _step;");
+            output.WriteLine();
 
             output.WriteLine("\tpublic void Execute()");
             output.WriteLine("\t{");
 
-            output.WriteLine("\t\tfor(;;)");
-            output.WriteLine("\t\t{");
-            output.WriteLine("\t\t\tswitch (_step)");
-            output.WriteLine("\t\t\t{");
-            output.WriteLine("\t\t\t\tcase Step._Start:");
-            output.WriteLine("\t\t\t\t\tBeforeExecute();");
-            output.WriteLine("\t\t\t\t\tbreak;");
+            output.WriteLine("\t\tStarting();");
             foreach (var s in p.Steps)
             {
-                output.WriteLine($"\t\t\t\tcase Step.{s.ClrName()}:");
-                output.WriteLine($"\t\t\t\t\t{s.ClrName()}();");
-                output.WriteLine("\t\t\t\t\tbreak;");
+                output.WriteLine($"\t\t{s.ClrName()}();");
             }
-            output.WriteLine("\t\t\t\tcase Step._End:");
-            output.WriteLine("\t\t\t\t\tAfterExecute();");
-            output.WriteLine("\t\t\t\t\tbreak;");
-            output.WriteLine("\t\t\t\tdefault:");
-            output.WriteLine("\t\t\t\t\tthrow new InvalidOperationException(_step.ToString());");
-            output.WriteLine("\t\t\t}");
-            output.WriteLine("\t\t}");
+            output.WriteLine("\t\tFinished();");
             output.WriteLine("\t}");
 
-            var e = new LookAheadEnumerator<Step>(p.Steps.GetEnumerator());
-            while (e.MoveNext())
-            {
-                var s = e.Current;
-                output.WriteLine();
-                output.WriteLine($"\tprivate void {s.ClrName()}()");
-                output.WriteLine("\t{");
-                output.WriteLine($"\t\tStarting(Step.{s.ClrName()});");
-                output.WriteLine($"\t\tBefore{s.ClrName()}();");
-                output.WriteLine($"\t\t{s.ClrName()}Core();");
-                output.WriteLine($"\t\tAfter{s.ClrName()}();");
-                output.WriteLine($"\t\tFinished(Step.{s.ClrName()});");
-                var next = e.Next?.ClrName() ?? "_End";
-                output.WriteLine($"\t\t_step = Step.{next};");
-                output.WriteLine("\t}");
-            }
+            GenerateStarting(p, output);
+
+            GenerateSteps(p, output);
+
+            GenerateFinished(p, output);
 
             output.WriteLine();
-            output.WriteLine("\tpartial void BeforeExecute();");
+            output.WriteLine("\tprotected virtual void SetNextStep(Step s) => _step = s;");
             output.WriteLine();
-            output.WriteLine("\tpartial void AfterExecute();");
+            output.WriteLine("\tprotected virtual void StartingCore() {}");
+            output.WriteLine();
+            output.WriteLine("\tprotected virtual void FinishedCore() {}");
 
             foreach (var s in p.Steps)
             {
                 output.WriteLine();
-                output.WriteLine($"\tpartial void {s.ClrName()}Core();");
+                output.WriteLine($"\tprotected abstract void {s.ClrName()}Core();");
             }
 
             foreach (var s in p.Steps)
             {
                 output.WriteLine();
-                output.WriteLine($"\tpartial void Before{s.ClrName()}();");
+                output.WriteLine($"\tprotected virtual void Before{s.ClrName()}() {{}}");
                 output.WriteLine();
-                output.WriteLine($"\tpartial void After{s.ClrName()}();");
+                output.WriteLine($"\tprotected virtual void After{s.ClrName()}() {{}}");
             }
 
             output.WriteLine();
-            output.WriteLine("\tpartial void Starting(Step step);");
+            output.WriteLine("\tprotected virtual void OnStart(Step step) {}");
             output.WriteLine();
-            output.WriteLine("\tpartial void Finished(Step step);");
+            output.WriteLine("\tprotected virtual void OnEnd(Step step) {}");
 
             output.WriteLine();
-            output.WriteLine("\tenum Step");
+            output.WriteLine("\tprotected enum Step");
             output.WriteLine("\t{");
             output.WriteLine($"\t\t_Start,");
             foreach (var s in p.Steps)
             {
                 output.WriteLine($"\t\t{s.ClrName()},");
             }
-            output.WriteLine($"\t\t_End,");
+            output.WriteLine($"\t\t_Finish,");
             output.WriteLine("\t}");
 
             output.WriteLine("}");
         }
 
+        private static void GenerateSteps(BusinessProcess p, StreamWriter output)
+        {
+            var e = new LookAheadEnumerator<Step>(p.Steps.GetEnumerator());
+            while (e.MoveNext())
+            {
+                var s = e.Current;
+                string stepName = s.ClrName();
+                output.WriteLine();
+                output.WriteLine($"\tprivate void {stepName}()");
+                output.WriteLine("\t{");
+                output.WriteLine($"\t\tif (_step != Step.{stepName}) return;");
+                output.WriteLine($"\t\tOnStart(Step.{stepName});");
+                output.WriteLine($"\t\tBefore{stepName}();");
+                output.WriteLine($"\t\t{stepName}Core();");
+                output.WriteLine($"\t\tAfter{stepName}();");
+                output.WriteLine($"\t\tOnEnd(Step.{stepName});");
+                var next = e.Next?.ClrName() ?? "_Finish";
+                output.WriteLine($"\t\tSetNextStep(Step.{next});");
+                output.WriteLine("\t}");
+            }
+        }
+
+        private static void GenerateStarting(BusinessProcess p, StreamWriter output)
+        {
+            output.WriteLine();
+            output.WriteLine($"\tprivate void Starting()");
+            output.WriteLine("\t{");
+            output.WriteLine($"\t\tif (_step != Step._Start) return;");
+            output.WriteLine($"\t\tStartingCore();");
+            var next1 = p.Steps.FirstOrDefault()?.ClrName() ?? "_End";
+            output.WriteLine($"\t\tSetNextStep(Step.{next1});");
+            output.WriteLine("\t}");
+        }
+
+        private static void GenerateFinished(BusinessProcess p, StreamWriter output)
+        {
+            output.WriteLine();
+            output.WriteLine($"\tprivate void Finished()");
+            output.WriteLine("\t{");
+            output.WriteLine($"\t\tif (_step != Step._Finish) return;");
+            output.WriteLine($"\t\tFinishedCore();");
+            output.WriteLine("\t}");
+        }
     }
 
 
