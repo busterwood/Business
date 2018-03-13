@@ -1,5 +1,6 @@
 ﻿using BusterWood.Collections;
 using BusterWood.Contracts;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -45,10 +46,10 @@ namespace BusterWood.Business
                 {
                     if (table == null)
                        throw new ParseException($"Expected table declaration but got {_lines.Current}");
-                    
-                    //TODO: parse relationship, e.g. "has one or more orders"
 
-                    table.Fields.Add(new Field(_lines.Current));
+                    //TODO: parse relationship, e.g. "has one or more orders"
+                    var f = ParseField(_lines.Current);
+                    table.Fields.Add(f);
                 }
 
                 if (_lines.Next is Identifier i && i.Is(ProcessModelReader.ModelName))
@@ -57,6 +58,24 @@ namespace BusterWood.Business
 
             if (table != null)
                 yield return table;
+        }
+
+        private Field ParseField(Line line)
+        {
+            var text = line.Text;
+            var open = text.IndexOf('(');
+            if (open > 0)
+            {
+                var closed = text.IndexOf(')', open);
+                if (closed < 0)
+                    throw new ParseException("Open bracket without matching closing bracket on line " + line.LineNumber);
+
+                var type = text.Substring(open + 1, closed - open - 1);
+                var name = text.Substring(0, open).Trim();
+                return new Field(line) { Type=type, Name= name};
+            }
+
+            return new Field(line);
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -75,10 +94,15 @@ namespace BusterWood.Business
 
     public class Field : Line
     {
-        internal Field(Line l) : base(l.Text, l.LineNumber) { }
+        public string Type { get; set; }
+        public string Name { get; set; }
+
+        internal Field(Line l) : this(l.Text, l.LineNumber) { }
 
         public Field(string text, int line) : base(text, line)
         {
+            Name = text;
+            Type = "string";
         }
     }
 

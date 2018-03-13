@@ -18,6 +18,7 @@ namespace BusterWood.Business
                 var mod = Model.Parse(f);
                 var gen = new CsGenerator();
                 gen.Generate(mod, Environment.CurrentDirectory);
+                gen.Compile(mod, Path.Combine(Environment.CurrentDirectory, "sample.dll"));
             }
         }
     }

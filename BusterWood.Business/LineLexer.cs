@@ -60,7 +60,7 @@ namespace BusterWood.Business
             LineNumber = line;
         }
 
-        public override string ToString() => Text;
+        public override string ToString() => Text + " on line " + LineNumber;
 
         public bool Is(string other) => string.Equals(Text, other, System.StringComparison.OrdinalIgnoreCase);
     }

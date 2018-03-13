@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="BusterWood.Goodies" Version="0.7.0" />
+    <PackageReference Include="System.CodeDom" Version="4.4.0" />
   </ItemGroup>
   
 </Project>

@@ -33,6 +33,9 @@
     <Reference Include="BusterWood.Goodies, Version=0.7.0.0, Culture=neutral, PublicKeyToken=5a0ecd4636ebbeab, processorArchitecture=MSIL">
       <HintPath>..\packages\BusterWood.Goodies.0.7.0\lib\net461\BusterWood.Goodies.dll</HintPath>
     </Reference>
+    <Reference Include="sample">
+      <HintPath>..\Business.Tests\bin\Release\sample.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -43,12 +46,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Business.Tests\bin\Release\processes.cs">
+    <None Include="..\Business.Tests\bin\Release\processes.cs">
       <Link>processes.cs</Link>
-    </Compile>
-    <Compile Include="..\Business.Tests\bin\Release\tables.cs">
+    </None>
+    <None Include="..\Business.Tests\bin\Release\tables.cs">
       <Link>tables.cs</Link>
-    </Compile>
+    </None>
+    <Compile Include="PlaceATrade.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

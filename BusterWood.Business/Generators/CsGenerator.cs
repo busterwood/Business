@@ -2,56 +2,69 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.CodeDom.Compiler;
+using Microsoft.CSharp;
 
 namespace BusterWood.Business
 {
     public class CsGenerator : IGenerator
     {
-        public void Generate(Model model, string outputFolder)
+        internal void Compile(Model model, string outputPath)
         {
-            GenerateTables(model.Tables, outputFolder);
-            GenerateProcesses(model.BusinessProcesses, outputFolder);
+            var codeProvider = new CSharpCodeProvider();
+            var tables = new StringWriter();
+            GenerateTables(model.Tables, tables);
 
+            var process = new StringWriter();
+            GenerateProcesses(model.BusinessProcesses, process);
+
+            var @params = new CompilerParameters(new string[0], outputPath);
+            var results = codeProvider.CompileAssemblyFromSource(@params, tables.GetStringBuilder().ToString(), process.GetStringBuilder().ToString());
+            var errors = string.Join(Environment.NewLine, results.Errors.Cast<CompilerError>().Select(e => e.ToString()));
+            if (errors.Length > 0)
+                throw new Exception(errors);
         }
 
-        private void GenerateTables(UniqueList<Table> tables, string outputFolder)
+        public void Generate(Model model, string outputFolder)
         {
             using (var output = new StreamWriter(Path.Combine(outputFolder, "tables.cs")))
+                GenerateTables(model.Tables, output);
+
+            using (var output = new StreamWriter(Path.Combine(outputFolder, "processes.cs")))
+                GenerateProcesses(model.BusinessProcesses, output);
+        }
+
+        private void GenerateTables(UniqueList<Table> tables, TextWriter output)
+        {
+            foreach (var t in tables)
             {
-                output.WriteLine("using System;");
-                foreach (var t in tables)
-                {
-                    output.WriteLine();
-                    GenerateTable(t, output);
-                }
+                output.WriteLine();
+                GenerateTable(t, output);
             }
         }
 
-        private void GenerateTable(Table t, StreamWriter output)
+        private void GenerateTable(Table t, TextWriter output)
         {
             output.WriteLine($"public interface I{t.ClrName()}");
             output.WriteLine("{");
             foreach (var f in t.Fields)
             {
-                output.WriteLine($"\tstring {f.ClrName()} {{ get; }}");
+                string type = string.Equals(f.Type, "string", StringComparison.OrdinalIgnoreCase) ? f.Type : "I" + f.Type.ClrName();
+                output.WriteLine($"\t{type} {f.Name.ClrName()} {{ get; }}");
             }
             output.WriteLine("}");
         }
 
-        private void GenerateProcesses(UniqueList<BusinessProcess> businessProcesses, string outputFolder)
+        private void GenerateProcesses(UniqueList<BusinessProcess> businessProcesses, TextWriter output)
         {
-            using (var output = new StreamWriter(Path.Combine(outputFolder, "processes.cs")))
+            foreach (var p in businessProcesses)
             {
-                output.WriteLine("using System;");
-                foreach (var p in businessProcesses)
-                {
-                    output.WriteLine();
-                    GenerateProcess(p, output);
-                }
+                output.WriteLine();
+                GenerateProcess(p, output);
             }
         }
 
-        private void GenerateProcess(BusinessProcess p, StreamWriter output)
+        private void GenerateProcess(BusinessProcess p, TextWriter output)
         {
             string className = p.ClrName();
             output.WriteLine($"public abstract class {className}");
@@ -66,7 +79,7 @@ namespace BusterWood.Business
             GenerateFinished(p, output);
 
             output.WriteLine();
-            output.WriteLine("\tprotected virtual void SetNextStep(Step s) => _step = s;");
+            output.WriteLine("\tprotected virtual void SetNextStep(Step s) { _step = s; }");
             output.WriteLine();
             output.WriteLine("\tprotected virtual void StartingCore() {}");
             output.WriteLine();
@@ -75,13 +88,9 @@ namespace BusterWood.Business
             foreach (var s in p.Steps)
             {
                 output.WriteLine();
-                output.WriteLine($"\tprotected abstract void {s.ClrName()}Core();");
-            }
-
-            foreach (var s in p.Steps)
-            {
-                output.WriteLine();
                 output.WriteLine($"\tprotected virtual void Before{s.ClrName()}() {{}}");
+                output.WriteLine();
+                output.WriteLine($"\tprotected abstract void On{s.ClrName()}();");
                 output.WriteLine();
                 output.WriteLine($"\tprotected virtual void After{s.ClrName()}() {{}}");
             }
@@ -92,7 +101,7 @@ namespace BusterWood.Business
             output.WriteLine("\tprotected virtual void OnEnd(Step step) {}");
 
             output.WriteLine();
-            output.WriteLine("\tprotected enum Step");
+            output.WriteLine("\tpublic enum Step");
             output.WriteLine("\t{");
             output.WriteLine($"\t\t_Start,");
             foreach (var s in p.Steps)
@@ -105,7 +114,7 @@ namespace BusterWood.Business
             output.WriteLine("}");
         }
 
-        private static void GenerateGiven(BusinessProcess p, StreamWriter output)
+        private static void GenerateGiven(BusinessProcess p, TextWriter output)
         {
             if (p.Given == null) return;
             var g = p.Given;
@@ -114,7 +123,7 @@ namespace BusterWood.Business
             output.WriteLine();
         }
 
-        private static void GenerateExecute(BusinessProcess p, StreamWriter output)
+        private static void GenerateExecute(BusinessProcess p, TextWriter output)
         {
             output.WriteLine("\tpublic void Execute()");
             output.WriteLine("\t{");
@@ -128,7 +137,7 @@ namespace BusterWood.Business
             output.WriteLine("\t}");
         }
 
-        private static void GenerateSteps(BusinessProcess p, StreamWriter output)
+        private static void GenerateSteps(BusinessProcess p, TextWriter output)
         {
             var e = new LookAheadEnumerator<Step>(p.Steps.GetEnumerator());
             while (e.MoveNext())
@@ -141,7 +150,7 @@ namespace BusterWood.Business
                 output.WriteLine($"\t\tif (_step != Step.{stepName}) return;");
                 output.WriteLine($"\t\tOnStart(Step.{stepName});");
                 output.WriteLine($"\t\tBefore{stepName}();");
-                output.WriteLine($"\t\t{stepName}Core();");
+                output.WriteLine($"\t\tOn{stepName}();");
                 output.WriteLine($"\t\tAfter{stepName}();");
                 output.WriteLine($"\t\tOnEnd(Step.{stepName});");
                 var next = e.Next?.ClrName() ?? "_Finish";
@@ -150,7 +159,7 @@ namespace BusterWood.Business
             }
         }
 
-        private static void GenerateStarting(BusinessProcess p, StreamWriter output)
+        private static void GenerateStarting(BusinessProcess p, TextWriter output)
         {
             output.WriteLine();
             output.WriteLine($"\tprivate void Starting()");
@@ -162,7 +171,7 @@ namespace BusterWood.Business
             output.WriteLine("\t}");
         }
 
-        private static void GenerateFinished(BusinessProcess p, StreamWriter output)
+        private static void GenerateFinished(BusinessProcess p, TextWriter output)
         {
             output.WriteLine();
             output.WriteLine($"\tprivate void Finished()");
