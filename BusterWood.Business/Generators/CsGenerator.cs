@@ -10,9 +10,9 @@ namespace BusterWood.Business
 {
     public class CsGenerator : IGenerator
     {
-        internal void Compile(Model model, string outputPath, IReadOnlyDictionary<string, object> options)
+        internal void Compile(Model model, string outputPath, IReadOnlyDictionary<string, object> options = null)
         {
-            string @namespace = options?.GetValueOrDefault("namespace")?.ToString();
+            string @namespace = options?.GetValueOrDefault("namespace")?.ToString() ?? Path.GetFileNameWithoutExtension(outputPath);
 
             var codeProvider = new CSharpCodeProvider();
             var tables = new StringWriter();
@@ -28,7 +28,7 @@ namespace BusterWood.Business
                 throw new Exception(errors);
         }
 
-        public void Generate(Model model, string outputFolder, IReadOnlyDictionary<string, object> options)
+        public void Generate(Model model, string outputFolder, IReadOnlyDictionary<string, object> options = null)
         {
             string @namespace = options?.GetValueOrDefault("namespace")?.ToString();
 
@@ -95,7 +95,12 @@ namespace BusterWood.Business
             output.WriteLine($"public abstract class {className}");
             output.WriteLine("{");
             output.WriteLine("\tStep _step;");
+
+            output.WriteLine();    
+            output.WriteLine("\tpublic Exception Failure { get; private set; }");
+
             output.WriteLine();
+            output.WriteLine("\tpublic bool Failed { get { return Failure != null; } }");
 
             GenerateGiven(p, output);
             GenerateExecute(p, output);
@@ -145,29 +150,39 @@ namespace BusterWood.Business
         {
             if (p.Given == null) return;
             var g = p.Given;
+            output.WriteLine();
             output.WriteLine($"\t/// <summary>{g}</summary>");
             output.WriteLine($"\tpublic abstract bool Given(I{g.What.ClrName()} item);");
-            output.WriteLine();
         }
 
         private static void GenerateExecute(BusinessProcess p, TextWriter output)
         {
+            output.WriteLine();
             output.WriteLine("\tpublic void Execute()");
             output.WriteLine("\t{");
 
+            output.WriteLine("\t\tFailure = null;");
             output.WriteLine("\t\ttry");
             output.WriteLine("\t\t{");
-            output.WriteLine("\t\t\tStarting();");
-            foreach (var s in p.Steps)
-            {
-                output.WriteLine($"\t\t\t{s.ClrName()}();");
-            }
-            output.WriteLine("\t\t\tFinished();");
+            output.WriteLine("\t\t\tOnExecute();");
             output.WriteLine("\t\t}");
             output.WriteLine("\t\tcatch (Exception e)");
             output.WriteLine("\t\t{");
+            output.WriteLine("\t\t\tFailure = e;");
             output.WriteLine("\t\t\tOnFailure(_step, e);");
             output.WriteLine("\t\t}");
+            output.WriteLine("\t}");
+
+            output.WriteLine();
+            output.WriteLine("\tprotected virtual void OnExecute()");
+            output.WriteLine("\t{");
+
+            output.WriteLine("\t\tStarting();");
+            foreach (var s in p.Steps)
+            {
+                output.WriteLine($"\t\t{s.ClrName()}();");
+            }
+            output.WriteLine("\t\tFinished();");
             output.WriteLine("\t}");
         }
 

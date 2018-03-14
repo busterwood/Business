@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 
-namespace ClassLibrary1
+namespace SampleTests
 {
 
     class Basket : IBasket
@@ -26,6 +26,8 @@ namespace ClassLibrary1
         TransactionScope transaction;
         DateTime start;
 
+        public List<Step> finished = new List<Step>();
+
         public override bool Given(IBasket item)
         {
             basket = item as Basket;
@@ -34,36 +36,42 @@ namespace ClassLibrary1
 
         protected override void OnCheckRestrictions()
         {
-            throw new NotImplementedException();
         }
 
         protected override void OnGroupOrdersByRestrictionsIntoTickets()
         {
-            throw new NotImplementedException();
         }
 
         protected override void OnLocateStockWhenSellingShort()
         {
-            throw new NotImplementedException();
         }
 
         protected override void OnPlaceTicketsInEms()
         {
-            throw new NotImplementedException();
         }
+
+        public Exception ReservePositionException;
 
         protected override void OnReservePosition()
         {
-            throw new NotImplementedException();
+            if (ReservePositionException != null)
+                throw ReservePositionException;
         }
 
+        /// <summary>
+        /// new transaction per step
+        /// </summary>
         protected override void OnStart(Step step)
         {
-            transaction = new TransactionScope(TransactionScopeOption.Required);
             Log.Info("Starting", new { step });
             start = DateTime.UtcNow;
+
+            transaction = new TransactionScope(TransactionScopeOption.Required);
         }
 
+        /// <summary>
+        /// commit each step
+        /// </summary>
         protected override void OnEnd(Step step)
         {
             transaction.Complete();
@@ -71,8 +79,13 @@ namespace ClassLibrary1
 
             var elapsed = DateTime.UtcNow - start;
             Log.Info($"Finished in {elapsed.ToHuman()}", new { step });
+
+            finished.Add(step);
         }
 
+        /// <summary>
+        /// Rollback transaction on step failure
+        /// </summary>
         protected override void OnFailure(Step step, Exception e)
         {
             transaction.Dispose();
