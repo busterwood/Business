@@ -104,5 +104,54 @@ namespace BusterWood.Business
             t.Assert(() => order.Fields[1].Is("basket"));
         }
 
+        public static void has_zero_relationship(Test t)
+        {
+            var rel = Relationship(t, "has zero allocation");
+            t.Assert(() => rel.Many == Multiplicity.Zero);
+            if (rel.What != "allocation")
+                t.Error($"Expected 'allocation' but got '{rel.What}'");
+        }
+
+        public static void has_one_relationship(Test t)
+        {
+            var rel = Relationship(t, "has one allocation");
+            t.Assert(() => rel.Many == Multiplicity.One);
+            if (rel.What != "allocation")
+                t.Error($"Expected 'allocation' but got '{rel.What}'");
+        }
+
+        public static void has_zero_or_more_relationship(Test t)
+        {
+            var rel = Relationship(t, "has zero or more allocations");
+            t.Assert(() => rel.Many == Multiplicity.ZeroOrMore);
+            if (rel.What != "allocations")
+                t.Error($"Expected 'allocations' but got '{rel.What}'");
+        }
+
+        public static void has_one_or_more_relationship(Test t)
+        {
+            var rel = Relationship(t, "has one or more allocations");
+            t.Assert(() => rel.Many == Multiplicity.OneOrMore);
+            if (rel.What != "allocations")
+                t.Error($"Expected 'allocations' but got '{rel.What}'");
+        }
+
+        private static Relationship Relationship(Test t, string inputLine)
+        {
+            var reader = new DataModelReader(new Line[] {
+                new Identifier(DataModelReader.ModelName, 1),
+                new Identifier("order", 1),
+                new Line(inputLine, 2),
+            });
+            var tables = reader.ToList();
+            t.Assert(() => tables.Count == 1);
+            Table table = tables[0];
+            t.Assert(() => table.Is("order"));
+            t.Assert(() => table.Fields.Count == 1);
+            if (!(table.Fields[0] is Relationship))
+                t.Fatal("table.Fields[0] is NOT a Relationship, it is a " + table.Fields[0]?.GetType());
+
+            return (Relationship)table.Fields[0];
+        }
     }
 }

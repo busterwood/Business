@@ -5,6 +5,7 @@ using BusterWood.Contracts;
 using System;
 using BusterWood.Linq;
 using System.Linq;
+using BusterWood.Goodies;
 
 namespace BusterWood.Business
 {
@@ -70,13 +71,18 @@ namespace BusterWood.Business
         private Given ParseGiven(Line line)
         {
             //parse "Given a thing that xyz"
+            var bits = line.Text
+                .SplitOn(char.IsWhiteSpace)
+                .Select(chars => chars.Where(c => !c.IsWhiteSpace()))
+                .Where(chars => chars.Any())
+                .Select(chars => new string(chars.ToArray()))
+                .ToList();
 
-            var bits = line.Text.SplitOn(char.IsWhiteSpace).Select(chars => new string(chars.ToArray()).Trim()).ToList();
             if (!bits[0].Equals("given", StringComparison.OrdinalIgnoreCase))
                 return null;
             bits.RemoveAt(0);
 
-            Multiplicity many = Multiplicity.Zero;
+            var many = Multiplicity.Zero;
             string word = bits.FirstOrDefault();
             if (string.Equals(word, "a", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "an", StringComparison.OrdinalIgnoreCase))
             {
@@ -127,17 +133,6 @@ namespace BusterWood.Business
         public Multiplicity Many { get; set; }
         public string What { get; set; }
         public string Condition { get; set; }
-    }
-
-    [Flags]
-    public enum Multiplicity
-    {
-        Zero = 1,
-        One = 2,
-        Many = 4,
-        ZeroOrOne = Zero | One,
-        ZeroOrMore = Zero | Many,
-        OneOrMore = One | Many,
     }
 
     public class Step : Line

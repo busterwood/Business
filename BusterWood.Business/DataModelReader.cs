@@ -1,8 +1,13 @@
 ﻿using BusterWood.Collections;
 using BusterWood.Contracts;
+using BusterWood.Goodies;
+using BusterWood.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using static System.StringComparison;
 
 namespace BusterWood.Business
 {
@@ -62,6 +67,16 @@ namespace BusterWood.Business
 
         private Field ParseField(Line line)
         {
+            var bits = line.Text
+                .SplitOn(char.IsWhiteSpace)
+                .Select(chars => chars.Where(c => !c.IsWhiteSpace()))
+                .Where(chars => chars.Any())
+                .Select(chars => new string(chars.ToArray()))
+                .ToList();
+
+            if (bits[0].Equals("has", OrdinalIgnoreCase))
+                return Has(line, bits);
+
             var text = line.Text;
             var open = text.IndexOf('(');
             if (open > 0)
@@ -76,6 +91,29 @@ namespace BusterWood.Business
             }
 
             return new Field(line);
+        }
+
+        private Field Has(Line line, List<string> bits)
+        {
+            var e = new LookAheadEnumerator<string>(bits.GetEnumerator());
+            e.MoveNext(); // move to has
+            e.MoveNext(); // skip to next
+            var many = MultiplicityParser.Parse(e, line);
+            string what = ParseWhat(line, e);
+            return new Relationship(line) { Many = many, What = what };
+        }
+
+        private static string ParseWhat(Line line, LookAheadEnumerator<string> e)
+        {
+            var sb = new StringBuilder();
+            while (e.MoveNext())
+                sb.Append(e.Current).Append(" ");
+            if (sb.Length > 0)
+                sb.Length -= 1;
+            var what = sb.ToString();
+            if (string.IsNullOrWhiteSpace(what))
+                throw new ParseException("Expected the related thing name on " + line);
+            return what;
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -106,5 +144,15 @@ namespace BusterWood.Business
         }
     }
 
+    public class Relationship : Field
+    {
+        public Multiplicity Many { get; set; }
+        public string What { get; set; }
 
+        internal Relationship(Line l) : this(l.Text, l.LineNumber) { }
+
+        public Relationship(string text, int line) : base(text, line)
+        {
+        }
+    }
 }
