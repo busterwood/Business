@@ -92,7 +92,7 @@ namespace BusterWood.Business
         private void GenerateProcess(BusinessProcess p, TextWriter output)
         {
             string className = p.ClrName();
-            output.WriteLine($"public abstract class {className}");
+            output.WriteLine($"public abstract class {className}Process");
             output.WriteLine("{");
             output.WriteLine("\tStep _step;");
 
@@ -114,16 +114,6 @@ namespace BusterWood.Business
             output.WriteLine("\tprotected virtual void StartingCore() {}");
             output.WriteLine();
             output.WriteLine("\tprotected virtual void FinishedCore() {}");
-
-            foreach (var s in p.Steps)
-            {
-                output.WriteLine();
-                output.WriteLine($"\tprotected virtual void Before{s.ClrName()}() {{}}");
-                output.WriteLine();
-                output.WriteLine($"\tprotected abstract void On{s.ClrName()}();");
-                output.WriteLine();
-                output.WriteLine($"\tprotected virtual void After{s.ClrName()}() {{}}");
-            }
 
             output.WriteLine();
             output.WriteLine("\tprotected virtual void OnStart(Step step) {}");
@@ -152,7 +142,8 @@ namespace BusterWood.Business
             var g = p.Given;
             output.WriteLine();
             output.WriteLine($"\t/// <summary>{g}</summary>");
-            output.WriteLine($"\tpublic abstract bool Given(I{g.What.ClrName()} item);");
+            output.WriteLine($"\tpublic bool Given(I{g.What.ClrName()} item) {{ return {g.ClrName()}(item); }}");
+            output.WriteLine($"\tprotected abstract bool {g.ClrName()}(I{g.What.ClrName()} item);");
         }
 
         private static void GenerateExecute(BusinessProcess p, TextWriter output)
@@ -205,18 +196,27 @@ namespace BusterWood.Business
                 output.WriteLine($"\t\tSetNextStep(Step.{next});");
                 output.WriteLine($"\t\tOnEnd(Step.{stepName});");
                 output.WriteLine("\t}");
+
+                output.WriteLine();
+                output.WriteLine($"\tprotected virtual void Before{s.ClrName()}() {{}}");
+                output.WriteLine();
+                output.WriteLine($"\tprotected abstract void On{s.ClrName()}();");
+                output.WriteLine();
+                output.WriteLine($"\tprotected virtual void After{s.ClrName()}() {{}}");
             }
         }
 
         private static void GenerateStarting(BusinessProcess p, TextWriter output)
         {
             output.WriteLine();
-            output.WriteLine($"\tprivate void Starting()");
+            output.WriteLine("\tprivate void Starting()");
             output.WriteLine("\t{");
-            output.WriteLine($"\t\tif (_step != Step._Start) return;");
-            output.WriteLine($"\t\tStartingCore();");
+            output.WriteLine("\t\tif (_step != Step._Start) return;");
+            output.WriteLine("\t\tOnStart(Step._Start);");
+            output.WriteLine("\t\tStartingCore();");
             var next1 = p.Steps.FirstOrDefault()?.ClrName() ?? "_End";
             output.WriteLine($"\t\tSetNextStep(Step.{next1});");
+            output.WriteLine("\t\tOnEnd(Step._Start);");
             output.WriteLine("\t}");
         }
 
@@ -226,7 +226,9 @@ namespace BusterWood.Business
             output.WriteLine($"\tprivate void Finished()");
             output.WriteLine("\t{");
             output.WriteLine($"\t\tif (_step != Step._Finish) return;");
+            output.WriteLine("\t\tOnStart(Step._Finish);");
             output.WriteLine($"\t\tFinishedCore();");
+            output.WriteLine("\t\tOnEnd(Step._Finish);");
             output.WriteLine("\t}");
         }
     }

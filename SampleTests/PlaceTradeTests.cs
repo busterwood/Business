@@ -7,7 +7,7 @@ namespace SampleTests
 
     public class PlaceTradeTests
     {
-        PlaceATrade bp = new PlaceATrade();
+        PlaceTrade bp = new PlaceTrade();
 
         public void given_a_basket_returns_true(Test t)
         {
@@ -32,7 +32,7 @@ namespace SampleTests
             bp.Given(new Basket { Id = 1 });
             bp.Execute();
             t.Assert(() => bp.Failed);
-            t.AssertNot(() => bp.finished.Last() == sample.PlaceTrade.Step.PlaceTicketsInEms);
+            t.AssertNot(() => bp.finished.Last() == sample.PlaceTradeProcess.Step.PlaceTicketsInEms);
         }
 
         public void can_retry_execute_to_retry_the_same_step(Test t)
@@ -41,13 +41,13 @@ namespace SampleTests
             bp.Given(new Basket { Id = 1 });
             bp.Execute();
             t.Assert(() => bp.Failed);
-            t.AssertNot(() => bp.finished.Last() == sample.PlaceTrade.Step.PlaceTicketsInEms);
+            t.AssertNot(() => bp.finished.Last() == sample.PlaceTradeProcess.Step.PlaceTicketsInEms);
 
             // now try final step again
             bp.ReservePositionException = null;
             bp.Execute();
             t.AssertNot(() => bp.Failed);
-            t.Assert(() => bp.finished.Last() == sample.PlaceTrade.Step.PlaceTicketsInEms);
+            t.Assert(() => bp.finished.Contains(sample.PlaceTradeProcess.Step.PlaceTicketsInEms));
         }
     }
 }

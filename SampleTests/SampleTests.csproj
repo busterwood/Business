@@ -32,8 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BusterWood.Goodies, Version=0.7.0.0, Culture=neutral, PublicKeyToken=5a0ecd4636ebbeab, processorArchitecture=MSIL">
-      <HintPath>..\packages\BusterWood.Goodies.0.7.0\lib\net461\BusterWood.Goodies.dll</HintPath>
+    <Reference Include="BusterWood.Goodies, Version=0.8.0.0, Culture=neutral, PublicKeyToken=5a0ecd4636ebbeab, processorArchitecture=MSIL">
+      <HintPath>..\packages\BusterWood.Goodies.0.8.0\lib\net461\BusterWood.Goodies.dll</HintPath>
     </Reference>
     <Reference Include="sample">
       <HintPath>..\Business.Tests\bin\Release\sample.dll</HintPath>
@@ -49,7 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PlaceATrade.cs" />
+    <Compile Include="PlaceTrade.cs" />
     <Compile Include="PlaceTradeTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

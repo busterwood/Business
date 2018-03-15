@@ -20,15 +20,16 @@ namespace SampleTests
         public string HasOneOrMoreOrders => throw new NotImplementedException();
     }
 
-    class PlaceATrade : PlaceTrade
+    class PlaceTrade : PlaceTradeProcess
     {
         Basket basket;
         TransactionScope transaction;
         DateTime start;
+        Step nextStep;
 
         public List<Step> finished = new List<Step>();
 
-        public override bool Given(IBasket item)
+        protected override bool GivenABasket(IBasket item)
         {
             basket = item as Basket;
             return basket != null;
@@ -58,9 +59,7 @@ namespace SampleTests
                 throw ReservePositionException;
         }
 
-        /// <summary>
-        /// new transaction per step
-        /// </summary>
+        /// <summary>create a new transaction per step</summary>
         protected override void OnStart(Step step)
         {
             Log.Info("Starting", new { step });
@@ -69,9 +68,13 @@ namespace SampleTests
             transaction = new TransactionScope(TransactionScopeOption.Required);
         }
 
-        /// <summary>
-        /// commit each step
-        /// </summary>
+        /// <summary>Store the next step until after the transaction commits in <see cref="OnEnd(Step)"/></summary>
+        protected override void SetNextStep(Step s)
+        {
+            nextStep = s;
+        }
+
+        /// <summary>commit each step</summary>
         protected override void OnEnd(Step step)
         {
             transaction.Complete();
@@ -81,11 +84,11 @@ namespace SampleTests
             Log.Info($"Finished in {elapsed.ToHuman()}", new { step });
 
             finished.Add(step);
+
+            base.SetNextStep(nextStep); 
         }
 
-        /// <summary>
-        /// Rollback transaction on step failure
-        /// </summary>
+        /// <summary>Rollback transaction on step failure</summary>
         protected override void OnFailure(Step step, Exception e)
         {
             transaction.Dispose();
