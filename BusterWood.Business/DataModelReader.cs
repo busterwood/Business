@@ -74,7 +74,7 @@ namespace BusterWood.Business
                 .Select(chars => new string(chars.ToArray()))
                 .ToList();
 
-            if (bits[0].Equals("has", OrdinalIgnoreCase))
+            if (bits[0].Equals("has", OrdinalIgnoreCase) || bits[0].Equals("for", OrdinalIgnoreCase)) //TODO: for is different type of relationship
                 return Has(line, bits);
 
             var text = line.Text;
@@ -154,5 +154,7 @@ namespace BusterWood.Business
         public Relationship(string text, int line) : base(text, line)
         {
         }
+
+        public string SingularWhat() => What?.EndsWith("s") == true ? What.Substring(0, What.Length - 1) : What;
     }
 }

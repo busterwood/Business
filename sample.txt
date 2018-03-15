@@ -28,7 +28,7 @@ data model:
 
 	broker order:
 		for one or more tickets
-		has one ore more fills
+		has one or more fills
 		has zero or more bookings
 
 	fill:

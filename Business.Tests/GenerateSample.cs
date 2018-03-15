@@ -13,15 +13,13 @@ namespace BusterWood.Business
     {
         public static void generate_sample(Test t)
         {
-            if (Tests.Short)
-                t.Skip();
-
             using (var f = new StreamReader(@"..\..\..\sample.txt"))
             {
                 var mod = Model.Parse(f);
                 var gen = new CsGenerator();
                 gen.Generate(mod, Environment.CurrentDirectory);
-                gen.Compile(mod, Path.Combine(Environment.CurrentDirectory, "sample.dll"));
+                if (!Tests.Short)
+                    gen.Compile(mod, Path.Combine(Environment.CurrentDirectory, "sample.dll"));
             }
         }
     }

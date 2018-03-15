@@ -16,7 +16,7 @@ namespace BusterWood.Business
 
             var codeProvider = new CSharpCodeProvider();
             var tables = new StringWriter();
-            GenerateTables(model.Tables, tables, @namespace);
+            CsTablesGenerator.GenerateTables(model.Tables, tables, @namespace);
 
             var process = new StringWriter();
             GenerateProcesses(model.BusinessProcesses, process, @namespace);
@@ -33,60 +33,22 @@ namespace BusterWood.Business
             string @namespace = options?.GetValueOrDefault("namespace")?.ToString();
 
             using (var output = new StreamWriter(Path.Combine(outputFolder, "tables.cs")))
-                GenerateTables(model.Tables, output, @namespace);
+                CsTablesGenerator.GenerateTables(model.Tables, output, @namespace);
 
             using (var output = new StreamWriter(Path.Combine(outputFolder, "processes.cs")))
                 GenerateProcesses(model.BusinessProcesses, output, @namespace);
         }
 
-        private void GenerateTables(UniqueList<Table> tables, TextWriter output, string @namespace)
-        {
-            StartNamespace(output, @namespace);
-            foreach (var t in tables)
-            {
-                output.WriteLine();
-                GenerateTable(t, output);
-            }
-            EndNamespace(output, @namespace);
-        }
-
-        private static void EndNamespace(TextWriter output, string @namespace)
-        {
-            if (!string.IsNullOrWhiteSpace(@namespace))
-                output.WriteLine("}");
-        }
-
-        private static void StartNamespace(TextWriter output, string @namespace)
-        {
-            if (!string.IsNullOrWhiteSpace(@namespace))
-            {
-                output.WriteLine("namespace " + @namespace);
-                output.WriteLine("{");
-            }
-        }
-
-        private void GenerateTable(Table t, TextWriter output)
-        {
-            output.WriteLine($"public interface I{t.ClrName()}");
-            output.WriteLine("{");
-            foreach (var f in t.Fields)
-            {
-                string type = string.Equals(f.Type, "string", StringComparison.OrdinalIgnoreCase) ? f.Type : "I" + f.Type.ClrName();
-                output.WriteLine($"\t{type} {f.Name.ClrName()} {{ get; }}");
-            }
-            output.WriteLine("}");
-        }
-
         private void GenerateProcesses(UniqueList<BusinessProcess> businessProcesses, TextWriter output, string @namespace)
         {
             output.WriteLine("using System;");
-            StartNamespace(output, @namespace);
+            CsTablesGenerator.StartNamespace(output, @namespace);
             foreach (var p in businessProcesses)
             {
                 output.WriteLine();
                 GenerateProcess(p, output);
             }
-            EndNamespace(output, @namespace);
+            CsTablesGenerator.EndNamespace(output, @namespace);
         }
 
         private void GenerateProcess(BusinessProcess p, TextWriter output)
@@ -143,6 +105,7 @@ namespace BusterWood.Business
             output.WriteLine();
             output.WriteLine($"\t/// <summary>{g}</summary>");
             output.WriteLine($"\tpublic bool Given(I{g.What.ClrName()} item) {{ return {g.ClrName()}(item); }}");
+            output.WriteLine();
             output.WriteLine($"\tprotected abstract bool {g.ClrName()}(I{g.What.ClrName()} item);");
         }
 
@@ -232,6 +195,4 @@ namespace BusterWood.Business
             output.WriteLine("\t}");
         }
     }
-
-
 }

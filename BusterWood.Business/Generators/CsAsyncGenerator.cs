@@ -8,34 +8,18 @@ namespace BusterWood.Business
     {
         public void Generate(Model model, string outputFolder, IReadOnlyDictionary<string, object> options)
         {
-            GenerateTables(model.Tables, outputFolder);
+            string @namespace = options?.GetValueOrDefault("namespace")?.ToString();
+            GenerateTables(model.Tables, outputFolder, @namespace);
             GenerateProcesses(model.BusinessProcesses, outputFolder);
 
         }
 
-        private void GenerateTables(UniqueList<Table> tables, string outputFolder)
+        private void GenerateTables(UniqueList<Table> tables, string outputFolder, string @namespace)
         {
             using (var output = new StreamWriter(Path.Combine(outputFolder, "tables.cs")))
             {
-                output.WriteLine("using System;");
-                output.WriteLine("using System.Threading.Tasks;");
-                foreach (var t in tables)
-                {
-                    output.WriteLine();
-                    GenerateTable(t, output);
-                }
+                CsTablesGenerator.GenerateTables(tables, output, @namespace);
             }
-        }
-
-        private void GenerateTable(Table t, StreamWriter output)
-        {
-            output.WriteLine($"public interface I{t.ClrName()}");
-            output.WriteLine("{");
-            foreach (var f in t.Fields)
-            {
-                output.WriteLine($"\tstring {f.ClrName()} {{ get; }}");
-            }
-            output.WriteLine("}");
         }
 
         private void GenerateProcesses(UniqueList<BusinessProcess> businessProcesses, string outputFolder)
