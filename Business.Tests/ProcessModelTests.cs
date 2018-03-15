@@ -82,5 +82,61 @@ namespace BusterWood.Business
             t.Assert(() => fill.Steps[0].Is("step a"));
             t.Assert(() => fill.Steps[1].Is("step b"));
         }
+
+        public static void can_read_given_a(Test t)
+        {
+            Given given = Given(t, "given a broker order");
+            t.Assert(() => given.Many == Multiplicity.One);
+            t.Assert(() => given.What == "broker order");
+            t.Assert(() => given.Condition == "");
+        }
+
+        public static void can_read_given_an(Test t)
+        {
+            Given given = Given(t, "given an broker order");
+            t.Assert(() => given.Many == Multiplicity.One);
+            t.Assert(() => given.What == "broker order");
+            t.Assert(() => given.Condition == "");
+        }
+
+        public static void can_read_given_some(Test t)
+        {
+            Given given = Given(t, "given some broker order");
+            t.Assert(() => given.Many == Multiplicity.OneOrMore);
+            t.Assert(() => given.What == "broker order");
+            t.Assert(() => given.Condition == "");
+        }
+
+        public static void can_read_given_many(Test t)
+        {
+            Given given = Given(t, "given many broker order");
+            t.Assert(() => given.Many == Multiplicity.OneOrMore);
+            t.Assert(() => given.What == "broker order");
+            t.Assert(() => given.Condition == "");
+        }
+
+        public static void can_read_given_that(Test t)
+        {
+            Given given = Given(t, "given a broker order that is booked");
+            t.Assert(() => given.Many == Multiplicity.One);
+            t.Assert(() => given.What == "broker order");
+            t.Assert(() => given.Condition == "is booked");
+        }
+
+        private static Given Given(Test t, string givenLine)
+        {
+            var reader = new ProcessModelReader(new Line[] {
+                new Identifier(ProcessModelReader.ModelName, 1),
+                new Identifier("place trade", 1),
+                new Line(givenLine, 2),
+            });
+            var procs = reader.ToList();
+            t.Assert(() => procs.Count == 1);
+            BusinessProcess process = procs[0];
+            t.Assert(() => process.Is("place trade"));
+            var given = process.Given;
+            t.Assert(() => given != null);
+            return given;
+        }
     }
 }
