@@ -49,6 +49,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BusinessProcessScheduler.cs" />
+    <Compile Include="CrossCuttingTransaction.cs" />
+    <Compile Include="IBusinessProcessScheduler.cs" />
+    <Compile Include="ICrossCutting.cs" />
     <Compile Include="PlaceTrade.cs" />
     <Compile Include="PlaceTradeTests.cs" />
     <Compile Include="Program.cs" />

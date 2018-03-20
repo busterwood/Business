@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace BusterWood.Business
 {
-    public class CsGenerator : IGenerator
+    public class CsStateMachineGenerator : IGenerator
     {
         internal void Compile(Model model, string outputPath, IReadOnlyDictionary<string, object> options = null)
         {
@@ -68,14 +68,14 @@ namespace BusterWood.Business
             GenerateExecute(p, output);
             GenerateStarting(p, output);
             GenerateSteps(p, output);
-            GenerateFinished(p, output);
+            GenerateFinished(output);
 
             output.WriteLine();
             output.WriteLine("\tprotected virtual void SetNextStep(Step s) { _step = s; }");
             output.WriteLine();
-            output.WriteLine("\tprotected virtual void StartingCore() {}");
+            output.WriteLine("\tprotected virtual void OnStarting() {}");
             output.WriteLine();
-            output.WriteLine("\tprotected virtual void FinishedCore() {}");
+            output.WriteLine("\tprotected virtual void OnFinished() {}");
 
             output.WriteLine();
             output.WriteLine("\tprotected virtual void OnStart(Step step) {}");
@@ -87,12 +87,12 @@ namespace BusterWood.Business
             output.WriteLine();
             output.WriteLine("\tpublic enum Step");
             output.WriteLine("\t{");
-            output.WriteLine($"\t\t_Start,");
+            output.WriteLine($"\t\tStarting,");
             foreach (var s in p.Steps)
             {
                 output.WriteLine($"\t\t{s.ClrName()},");
             }
-            output.WriteLine($"\t\t_Finish,");
+            output.WriteLine($"\t\tFinished,");
             output.WriteLine("\t}");
 
             output.WriteLine("}");
@@ -152,20 +152,14 @@ namespace BusterWood.Business
                 output.WriteLine("\t{");
                 output.WriteLine($"\t\tif (_step != Step.{stepName}) return;");
                 output.WriteLine($"\t\tOnStart(Step.{stepName});");
-                output.WriteLine($"\t\tBefore{stepName}();");
                 output.WriteLine($"\t\tOn{stepName}();");
-                output.WriteLine($"\t\tAfter{stepName}();");
-                var next = e.Next?.ClrName() ?? "_Finish";
+                var next = e.Next?.ClrName() ?? "Finished";
                 output.WriteLine($"\t\tSetNextStep(Step.{next});");
                 output.WriteLine($"\t\tOnEnd(Step.{stepName});");
                 output.WriteLine("\t}");
 
                 output.WriteLine();
-                output.WriteLine($"\tprotected virtual void Before{s.ClrName()}() {{}}");
-                output.WriteLine();
                 output.WriteLine($"\tprotected abstract void On{s.ClrName()}();");
-                output.WriteLine();
-                output.WriteLine($"\tprotected virtual void After{s.ClrName()}() {{}}");
             }
         }
 
@@ -174,24 +168,23 @@ namespace BusterWood.Business
             output.WriteLine();
             output.WriteLine("\tprivate void Starting()");
             output.WriteLine("\t{");
-            output.WriteLine("\t\tif (_step != Step._Start) return;");
-            output.WriteLine("\t\tOnStart(Step._Start);");
-            output.WriteLine("\t\tStartingCore();");
+            output.WriteLine("\t\tif (_step != Step.Starting) return;");
+            output.WriteLine("\t\tOnStart(Step.Starting);");
             var next1 = p.Steps.FirstOrDefault()?.ClrName() ?? "_End";
             output.WriteLine($"\t\tSetNextStep(Step.{next1});");
-            output.WriteLine("\t\tOnEnd(Step._Start);");
+            output.WriteLine("\t\tOnEnd(Step.Starting);");
             output.WriteLine("\t}");
         }
 
-        private static void GenerateFinished(BusinessProcess p, TextWriter output)
+        private static void GenerateFinished(TextWriter output)
         {
             output.WriteLine();
             output.WriteLine($"\tprivate void Finished()");
             output.WriteLine("\t{");
-            output.WriteLine($"\t\tif (_step != Step._Finish) return;");
-            output.WriteLine("\t\tOnStart(Step._Finish);");
-            output.WriteLine($"\t\tFinishedCore();");
-            output.WriteLine("\t\tOnEnd(Step._Finish);");
+            output.WriteLine($"\t\tif (_step != Step.Finished) return;");
+            output.WriteLine("\t\tOnStart(Step.Finished);");
+            output.WriteLine($"\t\tOnFinished();");
+            output.WriteLine("\t\tOnEnd(Step.Finished);");
             output.WriteLine("\t}");
         }
     }

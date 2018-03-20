@@ -3,9 +3,6 @@ using BusterWood.Logging;
 using sample;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Transactions;
 
 namespace SampleTests
@@ -20,12 +17,11 @@ namespace SampleTests
         public string HasOneOrMoreOrders => throw new NotImplementedException();
     }
 
+
     class PlaceTrade : PlaceTradeProcess
     {
         Basket basket;
-        TransactionScope transaction;
-        DateTime start;
-        Step nextStep;
+        CrossCuttingTransaction<Step> crossCutting = new CrossCuttingTransaction<Step>();
 
         public List<Step> finished = new List<Step>();
 
@@ -60,41 +56,22 @@ namespace SampleTests
         }
 
         /// <summary>create a new transaction per step</summary>
-        protected override void OnStart(Step step)
-        {
-            Log.Info("Starting", new { step });
-            start = DateTime.UtcNow;
-
-            transaction = new TransactionScope(TransactionScopeOption.Required);
-        }
+        protected override void OnStart(Step step) => crossCutting.OnStart(step);
 
         /// <summary>Store the next step until after the transaction commits in <see cref="OnEnd(Step)"/></summary>
-        protected override void SetNextStep(Step s)
-        {
-            nextStep = s;
-        }
+        protected override void SetNextStep(Step s) => crossCutting.SetNextStep(s);
 
         /// <summary>commit each step</summary>
         protected override void OnEnd(Step step)
         {
-            transaction.Complete();
-            transaction.Dispose();
-
-            var elapsed = DateTime.UtcNow - start;
-            Log.Info($"Finished in {elapsed.ToHuman()}", new { step });
-
+            crossCutting.OnEnd(step);
             finished.Add(step);
-
-            base.SetNextStep(nextStep); 
+            base.SetNextStep(crossCutting.NextStep);
         }
 
         /// <summary>Rollback transaction on step failure</summary>
-        protected override void OnFailure(Step step, Exception e)
-        {
-            transaction.Dispose();
-
-            var elapsed = DateTime.UtcNow - start;
-            Log.Error($"Failed in {elapsed.ToHuman()}, transaction rolled back", new { step, error=e });
-        }
+        protected override void OnFailure(Step step, Exception e) => crossCutting.OnFailure(step, e);
     }
+
+    
 }
