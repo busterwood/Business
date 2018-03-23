@@ -16,7 +16,7 @@ namespace BusterWood.Business
             using (var f = new StreamReader(@"..\..\..\sample.txt"))
             {
                 var mod = Model.Parse(f);
-                var gen = new CsStateMachineGenerator();
+                var gen = new CsStateMachineGenerator() { Transactions = true };
                 gen.Generate(mod, Environment.CurrentDirectory);
                 if (!Tests.Short)
                     gen.Compile(mod, Path.Combine(Environment.CurrentDirectory, "sample.dll"));

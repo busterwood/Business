@@ -51,9 +51,10 @@
     <None Include="..\Business.Tests\bin\Release\processes.cs">
       <Link>processes.cs</Link>
     </None>
-    <None Include="..\Business.Tests\bin\Release\tables.cs">
+    <Compile Include="..\Business.Tests\bin\Release\tables.cs">
       <Link>tables.cs</Link>
-    </None>
+    </Compile>
+    <Compile Include="Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

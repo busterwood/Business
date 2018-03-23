@@ -23,7 +23,7 @@ namespace SampleTests
         {
             bp.Given(new Basket { Id = 1 });
             bp.Execute();
-            t.AssertNot(() => bp.Failed);
+            t.AssertNot(() => bp.GetContext().Failed);
         }
 
         public void execute_fails_if_exception_thrown(Test t)
@@ -31,7 +31,7 @@ namespace SampleTests
             bp.ReservePositionException = new Exception("whoops");
             bp.Given(new Basket { Id = 1 });
             bp.Execute();
-            t.Assert(() => bp.Failed);
+            t.Assert(() => bp.GetContext().Failed);
             t.AssertNot(() => bp.finished.Last() == sample.PlaceTradeProcess.Step.PlaceTicketsInEms);
         }
 
@@ -40,13 +40,13 @@ namespace SampleTests
             bp.ReservePositionException = new Exception("whoops");
             bp.Given(new Basket { Id = 1 });
             bp.Execute();
-            t.Assert(() => bp.Failed);
+            t.Assert(() => bp.GetContext().Failed);
             t.AssertNot(() => bp.finished.Last() == sample.PlaceTradeProcess.Step.PlaceTicketsInEms);
 
             // now try final step again
             bp.ReservePositionException = null;
             bp.Execute();
-            t.AssertNot(() => bp.Failed);
+            t.AssertNot(() => bp.GetContext().Failed);
             t.Assert(() => bp.finished.Contains(sample.PlaceTradeProcess.Step.PlaceTicketsInEms));
         }
     }
