@@ -1,12 +1,10 @@
 ﻿using BusterWood.Goodies;
 using BusterWood.Logging;
 using System;
-using System.Transactions;
 
 namespace SampleTests
 {
-
-    class CrossCuttingTransaction<T> : ICrossCutting<T> where T : struct, IConvertible // enum 
+    class StepLogging<T> : ICrossCutting<T> where T : struct, IConvertible // enum 
     {
         DateTime start;
 

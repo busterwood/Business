@@ -1,9 +1,6 @@
-﻿using BusterWood.Goodies;
-using BusterWood.Logging;
-using sample;
+﻿using sample;
 using System;
 using System.Collections.Generic;
-using System.Transactions;
 
 namespace SampleTests
 {
@@ -23,7 +20,7 @@ namespace SampleTests
     class PlaceTrade : PlaceTradeProcess
     {
         Basket basket;
-        CrossCuttingTransaction<Step> crossCutting = new CrossCuttingTransaction<Step>();
+        StepLogging<Step> logging = new StepLogging<Step>();
 
         public List<Step> finished = new List<Step>();
 
@@ -36,13 +33,13 @@ namespace SampleTests
         }
 
         /// <summary>create a new transaction per step</summary>
-        protected override void OnStart(Step step) => crossCutting.OnStart(step);
+        protected override void OnStart(Step step) => logging.OnStart(step);
 
         /// <summary>commit each step</summary>
-        protected override void OnEnd(Step step) => crossCutting.OnEnd(step);
+        protected override void OnEnd(Step step) => logging.OnEnd(step);
 
         /// <summary>Rollback transaction on step failure</summary>
-        protected override void OnFailure(Step step, Exception e) => crossCutting.OnFailure(step, e);
+        protected override void OnFailure(Step step, Exception e) => logging.OnFailure(step, e);
 
 
         protected override Context OnStarting()

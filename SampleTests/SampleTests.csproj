@@ -50,7 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusinessProcessScheduler.cs" />
-    <Compile Include="CrossCuttingTransaction.cs" />
+    <Compile Include="StepLogging.cs" />
     <Compile Include="IBusinessProcessScheduler.cs" />
     <Compile Include="ICrossCutting.cs" />
     <Compile Include="PlaceTrade.cs" />
