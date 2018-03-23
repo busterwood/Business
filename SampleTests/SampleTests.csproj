@@ -35,9 +35,6 @@
     <Reference Include="BusterWood.Goodies, Version=0.8.0.0, Culture=neutral, PublicKeyToken=5a0ecd4636ebbeab, processorArchitecture=MSIL">
       <HintPath>..\packages\BusterWood.Goodies.0.8.0\lib\net461\BusterWood.Goodies.dll</HintPath>
     </Reference>
-    <Reference Include="sample">
-      <HintPath>..\Business.Tests\bin\Release\sample.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Transactions" />
@@ -50,6 +47,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusinessProcessScheduler.cs" />
+    <Compile Include="common.cs" />
+    <Compile Include="processes.cs" />
     <Compile Include="StepLogging.cs" />
     <Compile Include="IBusinessProcessScheduler.cs" />
     <Compile Include="ICrossCutting.cs" />
@@ -58,10 +57,17 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SomeBusinessException.cs" />
+    <Compile Include="tables.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="sample.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>rem dotnet $(SolutionDir)BusterWood.Business\bin\$(ConfigurationName)\netcoreapp2.0\BusterWood.Business.dll sample.txt</PreBuildEvent>
+  </PropertyGroup>
 </Project>

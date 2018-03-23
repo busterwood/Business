@@ -1,0 +1,106 @@
+data model:
+	user:
+		name
+
+	security:
+		name
+
+	investor:
+		name
+
+	basket:
+		decision maker (user)
+		has one or more orders
+
+	order:
+		has one or more allocations
+		security		
+
+	allocation:
+		investor
+		security
+		quantity
+
+	ticket:
+		for one or more allocations
+		security
+		quantity
+
+	broker order:
+		for one or more tickets
+		has one or more fills
+		has zero or more bookings
+
+	fill:
+		broker
+		security
+		price
+		quantity
+
+	booking:
+		// is this a real thing or accidental complexity?
+
+	broker:
+		name
+
+
+// TODO technical failure separate from business process failure
+// report technical failure, policy will then decide retry step, retry whole process
+
+process: 
+	place trade:
+		given a basket
+		check restrictions
+		reserve position
+		locate stock when selling short
+		group orders by restrictions into tickets
+		place tickets in EMS
+
+	locate stock:
+		request stock
+		wait for stock location
+
+	book broker order:
+		given a broker order
+		fairly allocate across tickets
+		book the fair allocations
+
+	amend booked broker order:
+		given a broker order that is booked
+		change details of broker order
+		fairly allocate across tickets
+		amend existing booking
+
+	amend held broker order:
+		given a broker order that has failed to book
+		change details of broker order
+		fairly allocate across tickets
+		amend existing booking
+
+	cancel booked broker order:
+		given a broker order that is booked
+		cancel booking
+
+	late fill:
+		given a broker order that is booked
+		change one or more fills
+		fairly allocate across tickets
+		amend existing booking
+
+	correct investor:
+		given a broker order that is booked
+		change investor of one or more tickets
+		amend existing booking
+
+	cancel order:
+		given an order
+		cancel tickets executing in EMS
+		cancel reserved positions
+		order is now cancelled
+
+	cancel basket:
+		given a basket
+		cancel tickets executing in EMS
+		cancel reserved positions
+		all orders are now cancelled
+		basket is now cancelled
