@@ -19,32 +19,32 @@ namespace BusterWood.Business
         string CallModifier => Async ? "await " : "";
         string TransactionScopeOption => Async ? "TransactionScopeAsyncFlowOption.Enabled" : "";
 
-        internal void Compile(Model model, string outputPath, IReadOnlyDictionary<string, object> options = null)
-        {
-            string @namespace = options?.GetValueOrDefault("namespace")?.ToString() ?? Path.GetFileNameWithoutExtension(outputPath);
+        //internal void Compile(Model model, string outputPath, IReadOnlyDictionary<string, object> options = null)
+        //{
+        //    string @namespace = options?.GetValueOrDefault("namespace")?.ToString() ?? Path.GetFileNameWithoutExtension(outputPath);
 
-            var codeProvider = new CSharpCodeProvider();
+        //    var codeProvider = new CSharpCodeProvider();
 
-            var common = new StringWriter();
-            CsCommonGenerator.Generate(common, @namespace);
+        //    var common = new StringWriter();
+        //    CsCommonGenerator.Generate(common, @namespace);
 
-            var tables = new StringWriter();
-            CsTablesGenerator.GenerateTables(model.Tables, tables, @namespace);
+        //    var tables = new StringWriter();
+        //    CsTablesGenerator.GenerateTables(model.Tables, tables, @namespace);
 
-            var process = new StringWriter();
-            GenerateProcesses(model.BusinessProcesses, process, @namespace);
+        //    var process = new StringWriter();
+        //    GenerateProcesses(model.BusinessProcesses, process, @namespace);
 
-            var refs = Transactions ? new string[] { "System.Transactions.dll" } : new string[0];
-            var @params = new CompilerParameters(refs, outputPath);
-            var results = codeProvider.CompileAssemblyFromSource(@params, 
-                common.GetStringBuilder().ToString(), 
-                tables.GetStringBuilder().ToString(), 
-                process.GetStringBuilder().ToString()
-            );
-            var errors = string.Join(Environment.NewLine, results.Errors.Cast<CompilerError>().Select(e => e.ToString()));
-            if (errors.Length > 0)
-                throw new Exception(errors);
-        }
+        //    var refs = Transactions ? new string[] { "System.Transactions.dll" } : new string[0];
+        //    var @params = new CompilerParameters(refs, outputPath);
+        //    var results = codeProvider.CompileAssemblyFromSource(@params, 
+        //        common.GetStringBuilder().ToString(), 
+        //        tables.GetStringBuilder().ToString(), 
+        //        process.GetStringBuilder().ToString()
+        //    );
+        //    var errors = string.Join(Environment.NewLine, results.Errors.Cast<CompilerError>().Select(e => e.ToString()));
+        //    if (errors.Length > 0)
+        //        throw new Exception(errors);
+        //}
 
         public void Generate(Model model, string outputFolder, IReadOnlyDictionary<string, object> options = null)
         {

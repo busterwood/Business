@@ -18,8 +18,8 @@ namespace BusterWood.Business
                 var mod = Model.Parse(f);
                 var gen = new CsStateMachineGenerator() { Transactions = true };
                 gen.Generate(mod, Environment.CurrentDirectory);
-                if (!Tests.Short)
-                    gen.Compile(mod, Path.Combine(Environment.CurrentDirectory, "sample.dll"));
+                //if (!Tests.Short)
+                //    gen.Compile(mod, Path.Combine(Environment.CurrentDirectory, "sample.dll"));
             }
         }
     }

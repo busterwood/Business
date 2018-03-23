@@ -1,13 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>BusterWood.Business</AssemblyName>
     <RootNamespace>BusterWood</RootNamespace>
     <Version>0.1.0</Version>
     <PackageReleaseNotes>TBC</PackageReleaseNotes>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
+    <ApplicationIcon />
+    <OutputType>Exe</OutputType>
+    <StartupObject>BusterWood.Business.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
