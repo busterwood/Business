@@ -9,11 +9,11 @@ using System.Linq;
 
 namespace BusterWood.Business
 {
-    public class LineLexer : IEnumerable<Line>
+    public class Scanner : IEnumerable<Line>
     {
         readonly TextReader reader;
 
-        public LineLexer(TextReader reader)
+        public Scanner(TextReader reader)
         {
             Contract.RequiresNotNull(reader);
             this.reader = reader;

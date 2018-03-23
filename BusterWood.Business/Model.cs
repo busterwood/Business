@@ -16,7 +16,7 @@ namespace BusterWood.Business
 
         public static Model Parse(TextReader reader)
         {
-            var lex = new LineLexer(reader);
+            var lex = new Scanner(reader);
             var e = new LookAheadEnumerator<Line>(lex.GetEnumerator());
             var dmr = new DataModelReader(e);
             var pmr = new ProcessModelReader(e);
