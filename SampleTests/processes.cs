@@ -1,4 +1,6 @@
 using System;
+namespace sample
+{
 
 public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceTradeProcess.Context>
 {
@@ -1309,4 +1311,5 @@ public abstract class CancelBasketProcess: IProcess<CancelBasketProcess.Step, Ca
 	protected virtual void OnEnd(Step step) {}
 
 	protected virtual void OnFailure(Step step, Exception e) {}
+}
 }

@@ -1,3 +1,5 @@
+namespace sample
+{
 using System.Collections.Generic;
 
 public interface IUser
@@ -63,4 +65,5 @@ public interface IBooking
 public interface IBroker
 {
 	string Name { get; }
+}
 }

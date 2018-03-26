@@ -1,3 +1,5 @@
+namespace sample
+{
 using System;
     
 
@@ -42,3 +44,4 @@ using System;
             }
         }
     }
+}

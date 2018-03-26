@@ -19,7 +19,9 @@ namespace BusterWood.Business
             var txns = args.Remove("--txn");
             var async = args.Remove("--async");
 
-            var outputFolder = GetOutputFolder(args);
+            var @namespace = StringArg(args, "--namespace");
+
+            var outputFolder = StringArg(args, "--out", Environment.CurrentDirectory);
             if (outputFolder == null)
             {
                 LogError("--out requires an output folder to follow it");
@@ -37,25 +39,25 @@ namespace BusterWood.Business
             {
                 var mod = Model.Parse(reader);
                 var gen = new CsStateMachineGenerator() { Transactions = txns, Async = async };
-                gen.Generate(mod, outputFolder);
+                gen.Generate(mod, outputFolder, new Dictionary<string, object> { { "namespace", @namespace } });
             }
 
             return 0;
         }
 
-        private static string GetOutputFolder(List<string> args)
+        private static string StringArg(List<string> args, string arg, string @default = null)
         {
-            var outputFolder = Environment.CurrentDirectory;
-            var idx = args.IndexOf("--out");
-            if (idx > 0)
-            {
-                args.RemoveAt(idx);
-                if (idx == args.Count)
-                    return null;
-                outputFolder = args[idx];
-                args.RemoveAt(idx);
-            }
-            return outputFolder;
+            var idx = args.IndexOf(arg);
+            if (idx < 0)
+                return @default;
+
+            var result = @default;
+            args.RemoveAt(idx);
+            if (idx == args.Count)
+                return null; // arg name without following parameter
+            result = args[idx];
+            args.RemoveAt(idx);
+            return result;
         }
 
         private static void LogError(string err)
