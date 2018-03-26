@@ -80,7 +80,7 @@ namespace BusterWood.Business
         private void GenerateProcess(BusinessProcess p, TextWriter output)
         {
             string className = p.ClrName() + "Process";
-            output.WriteLine($"public abstract class {className}: IProcess<{className}.Step, {className}.Context>");
+            output.WriteLine($"public abstract partial class {className}: IProcess<{className}.Step, {className}.Context>");
             output.WriteLine("{");
             output.WriteLine("\tprotected Step _step;");
             output.WriteLine("\tprotected Context _context;");
@@ -149,6 +149,7 @@ namespace BusterWood.Business
             output.WriteLine($"\tpublic {MethodModifier}{VoidMethodReturns} Execute()");
             output.WriteLine("\t{");
 
+            output.WriteLine("\t\tif (_context == null) throw new InvalidOperationException(\"Expected the context to be setup in the Given method\");");
             output.WriteLine("\t\t_context.Failure = null;");
             output.WriteLine("\t\ttry");
             output.WriteLine("\t\t{");

@@ -1,8 +1,9 @@
 using System;
+using System.Transactions;
 namespace sample
 {
 
-public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceTradeProcess.Context>
+public abstract partial class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceTradeProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -35,6 +36,7 @@ public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceT
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -64,10 +66,14 @@ public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceT
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.CheckRestrictions;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.CheckRestrictions;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -79,10 +85,14 @@ public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceT
 		if (_step != Step.CheckRestrictions) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.CheckRestrictions);
-			_context = OnCheckRestrictions();
-			_step = Step.ReservePosition;
-			OnEnd(Step.CheckRestrictions);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.CheckRestrictions);
+				_context = OnCheckRestrictions();
+				_step = Step.ReservePosition;
+				OnEnd(Step.CheckRestrictions);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -94,10 +104,14 @@ public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceT
 		if (_step != Step.ReservePosition) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.ReservePosition);
-			_context = OnReservePosition();
-			_step = Step.LocateStockWhenSellingShort;
-			OnEnd(Step.ReservePosition);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.ReservePosition);
+				_context = OnReservePosition();
+				_step = Step.LocateStockWhenSellingShort;
+				OnEnd(Step.ReservePosition);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -109,10 +123,14 @@ public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceT
 		if (_step != Step.LocateStockWhenSellingShort) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.LocateStockWhenSellingShort);
-			_context = OnLocateStockWhenSellingShort();
-			_step = Step.GroupOrdersByRestrictionsIntoTickets;
-			OnEnd(Step.LocateStockWhenSellingShort);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.LocateStockWhenSellingShort);
+				_context = OnLocateStockWhenSellingShort();
+				_step = Step.GroupOrdersByRestrictionsIntoTickets;
+				OnEnd(Step.LocateStockWhenSellingShort);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -124,10 +142,14 @@ public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceT
 		if (_step != Step.GroupOrdersByRestrictionsIntoTickets) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.GroupOrdersByRestrictionsIntoTickets);
-			_context = OnGroupOrdersByRestrictionsIntoTickets();
-			_step = Step.PlaceTicketsInEms;
-			OnEnd(Step.GroupOrdersByRestrictionsIntoTickets);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.GroupOrdersByRestrictionsIntoTickets);
+				_context = OnGroupOrdersByRestrictionsIntoTickets();
+				_step = Step.PlaceTicketsInEms;
+				OnEnd(Step.GroupOrdersByRestrictionsIntoTickets);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -139,10 +161,14 @@ public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceT
 		if (_step != Step.PlaceTicketsInEms) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.PlaceTicketsInEms);
-			_context = OnPlaceTicketsInEms();
-			_step = Step.Ending;
-			OnEnd(Step.PlaceTicketsInEms);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.PlaceTicketsInEms);
+				_context = OnPlaceTicketsInEms();
+				_step = Step.Ending;
+				OnEnd(Step.PlaceTicketsInEms);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -154,10 +180,14 @@ public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceT
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -171,7 +201,7 @@ public abstract class PlaceTradeProcess: IProcess<PlaceTradeProcess.Step, PlaceT
 	protected virtual void OnFailure(Step step, Exception e) {}
 }
 
-public abstract class LocateStockProcess: IProcess<LocateStockProcess.Step, LocateStockProcess.Context>
+public abstract partial class LocateStockProcess: IProcess<LocateStockProcess.Step, LocateStockProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -196,6 +226,7 @@ public abstract class LocateStockProcess: IProcess<LocateStockProcess.Step, Loca
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -222,10 +253,14 @@ public abstract class LocateStockProcess: IProcess<LocateStockProcess.Step, Loca
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.RequestStock;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.RequestStock;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -237,10 +272,14 @@ public abstract class LocateStockProcess: IProcess<LocateStockProcess.Step, Loca
 		if (_step != Step.RequestStock) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.RequestStock);
-			_context = OnRequestStock();
-			_step = Step.WaitForStockLocation;
-			OnEnd(Step.RequestStock);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.RequestStock);
+				_context = OnRequestStock();
+				_step = Step.WaitForStockLocation;
+				OnEnd(Step.RequestStock);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -252,10 +291,14 @@ public abstract class LocateStockProcess: IProcess<LocateStockProcess.Step, Loca
 		if (_step != Step.WaitForStockLocation) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.WaitForStockLocation);
-			_context = OnWaitForStockLocation();
-			_step = Step.Ending;
-			OnEnd(Step.WaitForStockLocation);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.WaitForStockLocation);
+				_context = OnWaitForStockLocation();
+				_step = Step.Ending;
+				OnEnd(Step.WaitForStockLocation);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -267,10 +310,14 @@ public abstract class LocateStockProcess: IProcess<LocateStockProcess.Step, Loca
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -284,7 +331,7 @@ public abstract class LocateStockProcess: IProcess<LocateStockProcess.Step, Loca
 	protected virtual void OnFailure(Step step, Exception e) {}
 }
 
-public abstract class BookBrokerOrderProcess: IProcess<BookBrokerOrderProcess.Step, BookBrokerOrderProcess.Context>
+public abstract partial class BookBrokerOrderProcess: IProcess<BookBrokerOrderProcess.Step, BookBrokerOrderProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -314,6 +361,7 @@ public abstract class BookBrokerOrderProcess: IProcess<BookBrokerOrderProcess.St
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -340,10 +388,14 @@ public abstract class BookBrokerOrderProcess: IProcess<BookBrokerOrderProcess.St
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.FairlyAllocateAcrossTickets;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.FairlyAllocateAcrossTickets;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -355,10 +407,14 @@ public abstract class BookBrokerOrderProcess: IProcess<BookBrokerOrderProcess.St
 		if (_step != Step.FairlyAllocateAcrossTickets) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.FairlyAllocateAcrossTickets);
-			_context = OnFairlyAllocateAcrossTickets();
-			_step = Step.BookTheFairAllocations;
-			OnEnd(Step.FairlyAllocateAcrossTickets);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.FairlyAllocateAcrossTickets);
+				_context = OnFairlyAllocateAcrossTickets();
+				_step = Step.BookTheFairAllocations;
+				OnEnd(Step.FairlyAllocateAcrossTickets);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -370,10 +426,14 @@ public abstract class BookBrokerOrderProcess: IProcess<BookBrokerOrderProcess.St
 		if (_step != Step.BookTheFairAllocations) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.BookTheFairAllocations);
-			_context = OnBookTheFairAllocations();
-			_step = Step.Ending;
-			OnEnd(Step.BookTheFairAllocations);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.BookTheFairAllocations);
+				_context = OnBookTheFairAllocations();
+				_step = Step.Ending;
+				OnEnd(Step.BookTheFairAllocations);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -385,10 +445,14 @@ public abstract class BookBrokerOrderProcess: IProcess<BookBrokerOrderProcess.St
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -402,7 +466,7 @@ public abstract class BookBrokerOrderProcess: IProcess<BookBrokerOrderProcess.St
 	protected virtual void OnFailure(Step step, Exception e) {}
 }
 
-public abstract class AmendBookedBrokerOrderProcess: IProcess<AmendBookedBrokerOrderProcess.Step, AmendBookedBrokerOrderProcess.Context>
+public abstract partial class AmendBookedBrokerOrderProcess: IProcess<AmendBookedBrokerOrderProcess.Step, AmendBookedBrokerOrderProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -433,6 +497,7 @@ public abstract class AmendBookedBrokerOrderProcess: IProcess<AmendBookedBrokerO
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -460,10 +525,14 @@ public abstract class AmendBookedBrokerOrderProcess: IProcess<AmendBookedBrokerO
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.ChangeDetailsOfBrokerOrder;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.ChangeDetailsOfBrokerOrder;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -475,10 +544,14 @@ public abstract class AmendBookedBrokerOrderProcess: IProcess<AmendBookedBrokerO
 		if (_step != Step.ChangeDetailsOfBrokerOrder) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.ChangeDetailsOfBrokerOrder);
-			_context = OnChangeDetailsOfBrokerOrder();
-			_step = Step.FairlyAllocateAcrossTickets;
-			OnEnd(Step.ChangeDetailsOfBrokerOrder);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.ChangeDetailsOfBrokerOrder);
+				_context = OnChangeDetailsOfBrokerOrder();
+				_step = Step.FairlyAllocateAcrossTickets;
+				OnEnd(Step.ChangeDetailsOfBrokerOrder);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -490,10 +563,14 @@ public abstract class AmendBookedBrokerOrderProcess: IProcess<AmendBookedBrokerO
 		if (_step != Step.FairlyAllocateAcrossTickets) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.FairlyAllocateAcrossTickets);
-			_context = OnFairlyAllocateAcrossTickets();
-			_step = Step.AmendExistingBooking;
-			OnEnd(Step.FairlyAllocateAcrossTickets);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.FairlyAllocateAcrossTickets);
+				_context = OnFairlyAllocateAcrossTickets();
+				_step = Step.AmendExistingBooking;
+				OnEnd(Step.FairlyAllocateAcrossTickets);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -505,10 +582,14 @@ public abstract class AmendBookedBrokerOrderProcess: IProcess<AmendBookedBrokerO
 		if (_step != Step.AmendExistingBooking) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.AmendExistingBooking);
-			_context = OnAmendExistingBooking();
-			_step = Step.Ending;
-			OnEnd(Step.AmendExistingBooking);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.AmendExistingBooking);
+				_context = OnAmendExistingBooking();
+				_step = Step.Ending;
+				OnEnd(Step.AmendExistingBooking);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -520,10 +601,14 @@ public abstract class AmendBookedBrokerOrderProcess: IProcess<AmendBookedBrokerO
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -537,7 +622,7 @@ public abstract class AmendBookedBrokerOrderProcess: IProcess<AmendBookedBrokerO
 	protected virtual void OnFailure(Step step, Exception e) {}
 }
 
-public abstract class AmendHeldBrokerOrderProcess: IProcess<AmendHeldBrokerOrderProcess.Step, AmendHeldBrokerOrderProcess.Context>
+public abstract partial class AmendHeldBrokerOrderProcess: IProcess<AmendHeldBrokerOrderProcess.Step, AmendHeldBrokerOrderProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -568,6 +653,7 @@ public abstract class AmendHeldBrokerOrderProcess: IProcess<AmendHeldBrokerOrder
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -595,10 +681,14 @@ public abstract class AmendHeldBrokerOrderProcess: IProcess<AmendHeldBrokerOrder
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.ChangeDetailsOfBrokerOrder;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.ChangeDetailsOfBrokerOrder;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -610,10 +700,14 @@ public abstract class AmendHeldBrokerOrderProcess: IProcess<AmendHeldBrokerOrder
 		if (_step != Step.ChangeDetailsOfBrokerOrder) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.ChangeDetailsOfBrokerOrder);
-			_context = OnChangeDetailsOfBrokerOrder();
-			_step = Step.FairlyAllocateAcrossTickets;
-			OnEnd(Step.ChangeDetailsOfBrokerOrder);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.ChangeDetailsOfBrokerOrder);
+				_context = OnChangeDetailsOfBrokerOrder();
+				_step = Step.FairlyAllocateAcrossTickets;
+				OnEnd(Step.ChangeDetailsOfBrokerOrder);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -625,10 +719,14 @@ public abstract class AmendHeldBrokerOrderProcess: IProcess<AmendHeldBrokerOrder
 		if (_step != Step.FairlyAllocateAcrossTickets) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.FairlyAllocateAcrossTickets);
-			_context = OnFairlyAllocateAcrossTickets();
-			_step = Step.AmendExistingBooking;
-			OnEnd(Step.FairlyAllocateAcrossTickets);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.FairlyAllocateAcrossTickets);
+				_context = OnFairlyAllocateAcrossTickets();
+				_step = Step.AmendExistingBooking;
+				OnEnd(Step.FairlyAllocateAcrossTickets);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -640,10 +738,14 @@ public abstract class AmendHeldBrokerOrderProcess: IProcess<AmendHeldBrokerOrder
 		if (_step != Step.AmendExistingBooking) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.AmendExistingBooking);
-			_context = OnAmendExistingBooking();
-			_step = Step.Ending;
-			OnEnd(Step.AmendExistingBooking);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.AmendExistingBooking);
+				_context = OnAmendExistingBooking();
+				_step = Step.Ending;
+				OnEnd(Step.AmendExistingBooking);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -655,10 +757,14 @@ public abstract class AmendHeldBrokerOrderProcess: IProcess<AmendHeldBrokerOrder
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -672,7 +778,7 @@ public abstract class AmendHeldBrokerOrderProcess: IProcess<AmendHeldBrokerOrder
 	protected virtual void OnFailure(Step step, Exception e) {}
 }
 
-public abstract class CancelBookedBrokerOrderProcess: IProcess<CancelBookedBrokerOrderProcess.Step, CancelBookedBrokerOrderProcess.Context>
+public abstract partial class CancelBookedBrokerOrderProcess: IProcess<CancelBookedBrokerOrderProcess.Step, CancelBookedBrokerOrderProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -701,6 +807,7 @@ public abstract class CancelBookedBrokerOrderProcess: IProcess<CancelBookedBroke
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -726,10 +833,14 @@ public abstract class CancelBookedBrokerOrderProcess: IProcess<CancelBookedBroke
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.CancelBooking;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.CancelBooking;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -741,10 +852,14 @@ public abstract class CancelBookedBrokerOrderProcess: IProcess<CancelBookedBroke
 		if (_step != Step.CancelBooking) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.CancelBooking);
-			_context = OnCancelBooking();
-			_step = Step.Ending;
-			OnEnd(Step.CancelBooking);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.CancelBooking);
+				_context = OnCancelBooking();
+				_step = Step.Ending;
+				OnEnd(Step.CancelBooking);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -756,10 +871,14 @@ public abstract class CancelBookedBrokerOrderProcess: IProcess<CancelBookedBroke
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -773,7 +892,7 @@ public abstract class CancelBookedBrokerOrderProcess: IProcess<CancelBookedBroke
 	protected virtual void OnFailure(Step step, Exception e) {}
 }
 
-public abstract class LateFillProcess: IProcess<LateFillProcess.Step, LateFillProcess.Context>
+public abstract partial class LateFillProcess: IProcess<LateFillProcess.Step, LateFillProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -804,6 +923,7 @@ public abstract class LateFillProcess: IProcess<LateFillProcess.Step, LateFillPr
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -831,10 +951,14 @@ public abstract class LateFillProcess: IProcess<LateFillProcess.Step, LateFillPr
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.ChangeOneOrMoreFills;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.ChangeOneOrMoreFills;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -846,10 +970,14 @@ public abstract class LateFillProcess: IProcess<LateFillProcess.Step, LateFillPr
 		if (_step != Step.ChangeOneOrMoreFills) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.ChangeOneOrMoreFills);
-			_context = OnChangeOneOrMoreFills();
-			_step = Step.FairlyAllocateAcrossTickets;
-			OnEnd(Step.ChangeOneOrMoreFills);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.ChangeOneOrMoreFills);
+				_context = OnChangeOneOrMoreFills();
+				_step = Step.FairlyAllocateAcrossTickets;
+				OnEnd(Step.ChangeOneOrMoreFills);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -861,10 +989,14 @@ public abstract class LateFillProcess: IProcess<LateFillProcess.Step, LateFillPr
 		if (_step != Step.FairlyAllocateAcrossTickets) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.FairlyAllocateAcrossTickets);
-			_context = OnFairlyAllocateAcrossTickets();
-			_step = Step.AmendExistingBooking;
-			OnEnd(Step.FairlyAllocateAcrossTickets);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.FairlyAllocateAcrossTickets);
+				_context = OnFairlyAllocateAcrossTickets();
+				_step = Step.AmendExistingBooking;
+				OnEnd(Step.FairlyAllocateAcrossTickets);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -876,10 +1008,14 @@ public abstract class LateFillProcess: IProcess<LateFillProcess.Step, LateFillPr
 		if (_step != Step.AmendExistingBooking) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.AmendExistingBooking);
-			_context = OnAmendExistingBooking();
-			_step = Step.Ending;
-			OnEnd(Step.AmendExistingBooking);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.AmendExistingBooking);
+				_context = OnAmendExistingBooking();
+				_step = Step.Ending;
+				OnEnd(Step.AmendExistingBooking);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -891,10 +1027,14 @@ public abstract class LateFillProcess: IProcess<LateFillProcess.Step, LateFillPr
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -908,7 +1048,7 @@ public abstract class LateFillProcess: IProcess<LateFillProcess.Step, LateFillPr
 	protected virtual void OnFailure(Step step, Exception e) {}
 }
 
-public abstract class CorrectInvestorProcess: IProcess<CorrectInvestorProcess.Step, CorrectInvestorProcess.Context>
+public abstract partial class CorrectInvestorProcess: IProcess<CorrectInvestorProcess.Step, CorrectInvestorProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -938,6 +1078,7 @@ public abstract class CorrectInvestorProcess: IProcess<CorrectInvestorProcess.St
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -964,10 +1105,14 @@ public abstract class CorrectInvestorProcess: IProcess<CorrectInvestorProcess.St
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.ChangeInvestorOfOneOrMoreTickets;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.ChangeInvestorOfOneOrMoreTickets;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -979,10 +1124,14 @@ public abstract class CorrectInvestorProcess: IProcess<CorrectInvestorProcess.St
 		if (_step != Step.ChangeInvestorOfOneOrMoreTickets) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.ChangeInvestorOfOneOrMoreTickets);
-			_context = OnChangeInvestorOfOneOrMoreTickets();
-			_step = Step.AmendExistingBooking;
-			OnEnd(Step.ChangeInvestorOfOneOrMoreTickets);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.ChangeInvestorOfOneOrMoreTickets);
+				_context = OnChangeInvestorOfOneOrMoreTickets();
+				_step = Step.AmendExistingBooking;
+				OnEnd(Step.ChangeInvestorOfOneOrMoreTickets);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -994,10 +1143,14 @@ public abstract class CorrectInvestorProcess: IProcess<CorrectInvestorProcess.St
 		if (_step != Step.AmendExistingBooking) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.AmendExistingBooking);
-			_context = OnAmendExistingBooking();
-			_step = Step.Ending;
-			OnEnd(Step.AmendExistingBooking);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.AmendExistingBooking);
+				_context = OnAmendExistingBooking();
+				_step = Step.Ending;
+				OnEnd(Step.AmendExistingBooking);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1009,10 +1162,14 @@ public abstract class CorrectInvestorProcess: IProcess<CorrectInvestorProcess.St
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1026,7 +1183,7 @@ public abstract class CorrectInvestorProcess: IProcess<CorrectInvestorProcess.St
 	protected virtual void OnFailure(Step step, Exception e) {}
 }
 
-public abstract class CancelOrderProcess: IProcess<CancelOrderProcess.Step, CancelOrderProcess.Context>
+public abstract partial class CancelOrderProcess: IProcess<CancelOrderProcess.Step, CancelOrderProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -1057,6 +1214,7 @@ public abstract class CancelOrderProcess: IProcess<CancelOrderProcess.Step, Canc
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -1084,10 +1242,14 @@ public abstract class CancelOrderProcess: IProcess<CancelOrderProcess.Step, Canc
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.CancelTicketsExecutingInEms;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.CancelTicketsExecutingInEms;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1099,10 +1261,14 @@ public abstract class CancelOrderProcess: IProcess<CancelOrderProcess.Step, Canc
 		if (_step != Step.CancelTicketsExecutingInEms) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.CancelTicketsExecutingInEms);
-			_context = OnCancelTicketsExecutingInEms();
-			_step = Step.CancelReservedPositions;
-			OnEnd(Step.CancelTicketsExecutingInEms);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.CancelTicketsExecutingInEms);
+				_context = OnCancelTicketsExecutingInEms();
+				_step = Step.CancelReservedPositions;
+				OnEnd(Step.CancelTicketsExecutingInEms);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1114,10 +1280,14 @@ public abstract class CancelOrderProcess: IProcess<CancelOrderProcess.Step, Canc
 		if (_step != Step.CancelReservedPositions) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.CancelReservedPositions);
-			_context = OnCancelReservedPositions();
-			_step = Step.OrderIsNowCancelled;
-			OnEnd(Step.CancelReservedPositions);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.CancelReservedPositions);
+				_context = OnCancelReservedPositions();
+				_step = Step.OrderIsNowCancelled;
+				OnEnd(Step.CancelReservedPositions);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1129,10 +1299,14 @@ public abstract class CancelOrderProcess: IProcess<CancelOrderProcess.Step, Canc
 		if (_step != Step.OrderIsNowCancelled) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.OrderIsNowCancelled);
-			_context = OnOrderIsNowCancelled();
-			_step = Step.Ending;
-			OnEnd(Step.OrderIsNowCancelled);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.OrderIsNowCancelled);
+				_context = OnOrderIsNowCancelled();
+				_step = Step.Ending;
+				OnEnd(Step.OrderIsNowCancelled);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1144,10 +1318,14 @@ public abstract class CancelOrderProcess: IProcess<CancelOrderProcess.Step, Canc
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1161,7 +1339,7 @@ public abstract class CancelOrderProcess: IProcess<CancelOrderProcess.Step, Canc
 	protected virtual void OnFailure(Step step, Exception e) {}
 }
 
-public abstract class CancelBasketProcess: IProcess<CancelBasketProcess.Step, CancelBasketProcess.Context>
+public abstract partial class CancelBasketProcess: IProcess<CancelBasketProcess.Step, CancelBasketProcess.Context>
 {
 	protected Step _step;
 	protected Context _context;
@@ -1193,6 +1371,7 @@ public abstract class CancelBasketProcess: IProcess<CancelBasketProcess.Step, Ca
 
 	public void Execute()
 	{
+		if (_context == null) throw new InvalidOperationException("Expected the context to be setup in the Given method");
 		_context.Failure = null;
 		try
 		{
@@ -1221,10 +1400,14 @@ public abstract class CancelBasketProcess: IProcess<CancelBasketProcess.Step, Ca
 		if (_step != Step.Starting) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Starting);
-			_context = OnStarting();
-			_step = Step.CancelTicketsExecutingInEms;
-			OnEnd(Step.Starting);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Starting);
+				_context = OnStarting();
+				_step = Step.CancelTicketsExecutingInEms;
+				OnEnd(Step.Starting);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1236,10 +1419,14 @@ public abstract class CancelBasketProcess: IProcess<CancelBasketProcess.Step, Ca
 		if (_step != Step.CancelTicketsExecutingInEms) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.CancelTicketsExecutingInEms);
-			_context = OnCancelTicketsExecutingInEms();
-			_step = Step.CancelReservedPositions;
-			OnEnd(Step.CancelTicketsExecutingInEms);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.CancelTicketsExecutingInEms);
+				_context = OnCancelTicketsExecutingInEms();
+				_step = Step.CancelReservedPositions;
+				OnEnd(Step.CancelTicketsExecutingInEms);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1251,10 +1438,14 @@ public abstract class CancelBasketProcess: IProcess<CancelBasketProcess.Step, Ca
 		if (_step != Step.CancelReservedPositions) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.CancelReservedPositions);
-			_context = OnCancelReservedPositions();
-			_step = Step.AllOrdersAreNowCancelled;
-			OnEnd(Step.CancelReservedPositions);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.CancelReservedPositions);
+				_context = OnCancelReservedPositions();
+				_step = Step.AllOrdersAreNowCancelled;
+				OnEnd(Step.CancelReservedPositions);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1266,10 +1457,14 @@ public abstract class CancelBasketProcess: IProcess<CancelBasketProcess.Step, Ca
 		if (_step != Step.AllOrdersAreNowCancelled) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.AllOrdersAreNowCancelled);
-			_context = OnAllOrdersAreNowCancelled();
-			_step = Step.BasketIsNowCancelled;
-			OnEnd(Step.AllOrdersAreNowCancelled);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.AllOrdersAreNowCancelled);
+				_context = OnAllOrdersAreNowCancelled();
+				_step = Step.BasketIsNowCancelled;
+				OnEnd(Step.AllOrdersAreNowCancelled);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1281,10 +1476,14 @@ public abstract class CancelBasketProcess: IProcess<CancelBasketProcess.Step, Ca
 		if (_step != Step.BasketIsNowCancelled) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.BasketIsNowCancelled);
-			_context = OnBasketIsNowCancelled();
-			_step = Step.Ending;
-			OnEnd(Step.BasketIsNowCancelled);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.BasketIsNowCancelled);
+				_context = OnBasketIsNowCancelled();
+				_step = Step.Ending;
+				OnEnd(Step.BasketIsNowCancelled);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}
@@ -1296,10 +1495,14 @@ public abstract class CancelBasketProcess: IProcess<CancelBasketProcess.Step, Ca
 		if (_step != Step.Ending) return;
 		using (var tr = new Transition<Step, Context>(this))
 		{
-			OnStart(Step.Ending);
-			_context = OnEnding();
-			_step = Step.Finished;
-			OnEnd(Step.Ending);
+			using (var txn = new TransactionScope())
+			{
+				OnStart(Step.Ending);
+				_context = OnEnding();
+				_step = Step.Finished;
+				OnEnd(Step.Ending);
+				txn.Complete();
+			}
 			tr.Complete();
 		}
 	}

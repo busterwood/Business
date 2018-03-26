@@ -68,6 +68,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>dotnet $(SolutionDir)BusterWood.Business\bin\$(ConfigurationName)\netcoreapp2.0\BusterWood.Business.dll --namespace sample $(ProjectDir)sample.txt --out $(ProjectDir)</PreBuildEvent>
+    <PreBuildEvent>dotnet $(SolutionDir)BusterWood.Business\bin\$(ConfigurationName)\netcoreapp2.0\BusterWood.Business.dll --txn --namespace sample $(ProjectDir)sample.txt --out $(ProjectDir)</PreBuildEvent>
   </PropertyGroup>
 </Project>

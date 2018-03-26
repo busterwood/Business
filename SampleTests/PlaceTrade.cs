@@ -1,11 +1,23 @@
 ﻿using sample;
+using SampleTests;
 using System;
 using System.Collections.Generic;
 
-namespace SampleTests
+namespace sample
 {
 
-    class Basket : IBasket
+
+    public abstract partial class PlaceTradeProcess
+    {
+        public partial class Context
+        {
+            public Basket Basket;
+        }
+    }
+}
+namespace SampleTests
+{
+    public class Basket : IBasket
     {
         public int Id { get; set; }
 
@@ -16,10 +28,8 @@ namespace SampleTests
         public IEnumerable<IOrder> Orders => throw new NotImplementedException();
     }
 
-
     class PlaceTrade : PlaceTradeProcess
     {
-        Basket basket;
         StepLogging<Step> logging = new StepLogging<Step>();
 
         public List<Step> finished = new List<Step>();
@@ -28,8 +38,8 @@ namespace SampleTests
 
         protected override bool GivenABasket(IBasket item)
         {
-            basket = item as Basket;
-            return basket != null;
+            var ctx = new Context { Basket = item as Basket };
+            return ctx.Basket != null;
         }
 
         /// <summary>create a new transaction per step</summary>
