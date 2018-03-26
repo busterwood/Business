@@ -11,7 +11,7 @@ namespace BusterWood.Business
 {
     public class GenerateSample
     {
-        public static void generate_sample(Test t)
+        public static void generate_sample(/*Test t*/)
         {
             using (var f = new StreamReader(@"..\..\..\sample.txt"))
             {

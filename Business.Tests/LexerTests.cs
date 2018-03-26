@@ -12,7 +12,7 @@ namespace BusterWood.Business
             foreach (var input in new[] { "data model:", "data model:\r\n", " data model:\n", "   data model:   ", "\tdata model:\t" } )
             {
                 var reader = new StringReader(input);
-                var lex = new LineLexer(reader);
+                var lex = new Scanner(reader);
                 var tokens = lex.ToList();
 
                 if (tokens.Count != 1)
@@ -71,7 +71,7 @@ namespace BusterWood.Business
         static void TestLine(Test t, string input, string expected = "name")
         {
             var reader = new StringReader(input);
-            var lex = new LineLexer(reader);
+            var lex = new Scanner(reader);
             var tokens = lex.ToList();
 
             if (tokens.Count != 1)
